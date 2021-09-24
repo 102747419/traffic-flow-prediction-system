@@ -78,33 +78,36 @@ connections = {
 
 # print(get_connection(2825, 4030))
 
-# Read data
-sites = pd.read_csv('data/scats-sites.csv')
-data = pd.read_csv('data/scats-data.csv')
+def load_data():
+    # Read data
+    sites = pd.read_csv('data/scats-sites.csv')
+    data = pd.read_csv('data/scats-data.csv')
 
-# Filter interseciton sites
-sites = sites[sites['Site Type'].eq('INT')]
-data = data[data['SCATS Number'].isin(sites['Site Number'])]
+    # Filter interseciton sites
+    sites = sites[sites['Site Type'].eq('INT')]
+    data = data[data['SCATS Number'].isin(sites['Site Number'])]
 
-# Filter out data at (0,0)
-# data = data[(data['NB_LATITUDE'] != 0) & (data['NB_LONGITUDE'] != 0)]
+    # Filter out data at (0,0)
+    # data = data[(data['NB_LATITUDE'] != 0) & (data['NB_LONGITUDE'] != 0)]
 
-# Offset positions to align with map
-data['NB_LATITUDE'] = data['NB_LATITUDE'].add(0.0015)
-data['NB_LONGITUDE'] = data['NB_LONGITUDE'].add(0.0013)
+    # Offset positions to align with map
+    data['NB_LATITUDE'] = data['NB_LATITUDE'].add(0.0015)
+    data['NB_LONGITUDE'] = data['NB_LONGITUDE'].add(0.0013)
 
-# Assign unique ID to connections
-prev = None
-index = -1
-col = []
+    # Assign unique ID to connections
+    prev = None
+    index = -1
+    col = []
 
-for i, row in data.iterrows():
-    if row['Location'] != prev:
-        prev = row['Location']
-        index += 1
-    col.append(index)
+    for i, row in data.iterrows():
+        if row['Location'] != prev:
+            prev = row['Location']
+            index += 1
+        col.append(index)
 
-data.insert(0, 'id', col)
+    data.insert(0, 'id', col)
+
+    return data, sites
 
 
 def process_data(data, lags):
@@ -138,7 +141,21 @@ def process_data(data, lags):
     return X_train, y_train, X_test, y_test, scaler
 
 
-X_train, y_train, X_test, y_test, scaler = process_data(data, 12)
+def train_model():
+    pass
+
+
+def test_model():
+    pass
+
+
+lag = 12
+config = {"batch": 256, "epochs": 50}
+
+data, sites = load_data()
+X_train, y_train, X_test, y_test, scaler = process_data(data, lag)
+
+train_model()
 
 # Show sites on map
 fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
