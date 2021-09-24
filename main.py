@@ -150,11 +150,11 @@ def train_model():
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
     model, name = get_gru([12, 64, 64, 1])
 
-    model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+    model.compile(loss='mse', optimizer='rmsprop', metrics=['mape'])
     hist = model.fit(
         X_train, y_train,
-        batch_size=config["batch"],
-        epochs=config["epochs"],
+        batch_size=config['batch'],
+        epochs=config['epochs'],
         validation_split=0.05)
 
     model.save('model/' + name + '.h5')
@@ -169,7 +169,7 @@ def get_gru(units):
     model.add(Dropout(0.2))
     model.add(Dense(units[3], activation='sigmoid'))
 
-    return model, "gru"
+    return model, 'gru'
 
 
 def test_model():
@@ -177,7 +177,7 @@ def test_model():
 
 
 lag = 12
-config = {"batch": 256, "epochs": 50}
+config = {'batch': 256, 'epochs': 50}
 
 data, sites = load_data()
 
