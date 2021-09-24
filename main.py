@@ -1,10 +1,12 @@
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import tensorflow as tf
 from keras.layers import Dense, Dropout
 from keras.layers.recurrent import GRU
 from keras.models import Sequential
+from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -173,19 +175,60 @@ def get_gru(units):
 
 
 def test_model():
-    pass
+    # load the model
+    model = save.load_model('model/gru.h5')
+
+    # process the data
+    _, _, X_test, y_test, scaler = process_data(data, lag)
+
+    # unscale the test labels
+    y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # reshape the test data so it works with the model
+    X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+
+    # predict using the model
+    predicted = model.predict(X_test)
+
+    # unscale predicted data
+    predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # plot results!
+    plot_results(y_test, predicted, 'gru')
 
 
-lag = 12
+def plot_results(y_true, y_pred, name):
+    d = '2016-10-1 00:00'
+    x = pd.date_range(d, periods=len(y_true), freq='15min')
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.plot(x, y_true, label='True Data')
+    ax.plot(x, y_pred, label=name)
+
+    plt.legend()
+    plt.grid(True)
+    plt.xlabel('Time of Day')
+    plt.ylabel('Flow')
+
+    date_format = mpl.dates.DateFormatter('%H:%M')
+    ax.xaxis.set_major_formatter(date_format)
+    fig.autofmt_xdate()
+
+    plt.show()
+
+
+lag = 8
 config = {'batch': 256, 'epochs': 50}
-
 data, sites = load_data()
 
 train_model()
+test_model()
 
 # Show sites on map
-fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
-                        color_discrete_sequence=['fuchsia'], zoom=8)
-fig.update_layout(mapbox_style='open-street-map')
-fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
-fig.show()
+# fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
+#                         color_discrete_sequence=['fuchsia'], zoom=8)
+# fig.update_layout(mapbox_style='open-street-map')
+# fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
+# fig.show()
