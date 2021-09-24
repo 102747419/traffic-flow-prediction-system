@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
 
 
 class Intersection:
@@ -76,13 +78,9 @@ connections = {
 
 # print(get_connection(2825, 4030))
 
-
 # Read data
 sites = pd.read_csv('data/scats-sites.csv')
 data = pd.read_csv('data/scats-data.csv')
-
-print('sites', sites.size)
-print('data ', data.size)
 
 # Filter interseciton sites
 sites = sites[sites['Site Type'].eq('INT')]
@@ -90,6 +88,10 @@ data = data[data['SCATS Number'].isin(sites['Site Number'])]
 
 # Filter out data at (0,0)
 # data = data[(data['NB_LATITUDE'] != 0) & (data['NB_LONGITUDE'] != 0)]
+
+# Offset positions to align with map
+data['NB_LATITUDE'] = data['NB_LATITUDE'].add(0.0015)
+data['NB_LONGITUDE'] = data['NB_LONGITUDE'].add(0.0013)
 
 # Assign unique ID to connections
 prev = None
@@ -104,15 +106,39 @@ for i, row in data.iterrows():
 
 data.insert(0, 'id', col)
 
-print(data['id'].head(200))
 
-print('sites filtered', sites.size)
-print('data filtered ', data.size)
-print('unique sites  ', len(np.unique(data['SCATS Number'])))
+def process_data(data, lags):
+    # read data
+    site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
 
-# Offset positions to align with map
-data['NB_LATITUDE'] = data['NB_LATITUDE'].add(0.0015)
-data['NB_LONGITUDE'] = data['NB_LONGITUDE'].add(0.0013)
+    # normalize data
+    scaler = MinMaxScaler((0, 1)).fit(site_data)
+    flow1 = scaler.transform(site_data[:21]).reshape(1, -1)[0]
+    flow2 = scaler.transform(site_data[21:]).reshape(1, -1)[0]
+
+    # group data into arrays of 12 elements (defined by lags variable)
+    train, test = [], []
+    for i in range(lags, len(flow1)):
+        train.append(flow1[i - lags: i + 1])
+    for i in range(lags, len(flow2)):
+        test.append(flow2[i - lags: i + 1])
+
+    # shuffle training data
+    train = np.array(train)
+    test = np.array(test)
+    np.random.shuffle(train)
+
+    # separate label (y_...) from data (X_...)
+    X_train = train[:, :-1]
+    y_train = train[:, -1]
+    X_test = test[:, :-1]
+    y_test = test[:, -1]
+
+    # return scalar so it can be unscaled using scaler.inverse_transform()
+    return X_train, y_train, X_test, y_test, scaler
+
+
+X_train, y_train, X_test, y_test, scaler = process_data(data, 12)
 
 # Show sites on map
 fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
