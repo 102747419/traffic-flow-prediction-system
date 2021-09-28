@@ -198,7 +198,7 @@ def test_model():
 
 
 def plot_results(y_true, y_pred, name):
-    d = '2016-10-1 00:00'
+    d = '2016-10-1 ' + str(lag / 4) + ':00'
     x = pd.date_range(d, periods=len(y_true), freq='15min')
 
     fig = plt.figure()
