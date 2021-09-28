@@ -121,8 +121,8 @@ def process_data(data, lags):
 
     # normalize data
     scaler = MinMaxScaler((0, 1)).fit(site_data)
-    flow1 = scaler.transform(site_data[:21]).reshape(1, -1)[0]
-    flow2 = scaler.transform(site_data[21:]).reshape(1, -1)[0]
+    flow1 = scaler.transform(site_data).reshape(1, -1)[0]
+    flow2 = scaler.transform(site_data).reshape(1, -1)[0]
 
     # group data into arrays of 12 elements (defined by lags variable)
     train, test = [], []
@@ -150,7 +150,7 @@ def train_model():
     X_train, y_train, _, _, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-    model, name = get_gru([12, 64, 64, 1])
+    model, name = get_gru([lag, 64, 64, 1])
 
     model.compile(loss='mse', optimizer='rmsprop', metrics=['mape'])
     hist = model.fit(
@@ -220,7 +220,7 @@ def plot_results(y_true, y_pred, name):
 
 
 lag = 8
-config = {'batch': 256, 'epochs': 50}
+config = {'batch': 50, 'epochs': 50}
 data, sites = load_data()
 
 train_model()
