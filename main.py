@@ -124,12 +124,19 @@ def process_data(data, lags):
     flow1 = scaler.transform(site_data).reshape(1, -1)[0]
     flow2 = scaler.transform(site_data).reshape(1, -1)[0]
 
-    # group data into arrays of 12 elements (defined by lags variable)
+    flow1_copy = np.append(flow1, flow1)
+    flow2_copy = np.append(flow2, flow2)
+
+    # group data into arrays of 8 elements (defined by lags variable)
     train, test = [], []
-    for i in range(lags, len(flow1)):
-        train.append(flow1[i - lags: i + 1])
-    for i in range(lags, len(flow2)):
-        test.append(flow2[i - lags: i + 1])
+    for i in range(len(flow1), len(flow1_copy)):
+        arr = flow1_copy[i - lags: i + 1]
+        # np.insert(arr, 0, 0)
+        train.append(arr)
+    for i in range(len(flow2), len(flow2_copy)):
+        arr = flow2_copy[i - lags: i + 1]
+        # np.insert(arr, 0, 0)
+        test.append(arr)
 
     # shuffle training data
     train = np.array(train)
@@ -198,7 +205,7 @@ def test_model():
 
 
 def plot_results(y_true, y_pred, name):
-    d = '2016-10-1 ' + str(lag / 4) + ':00'
+    d = '2016-10-1 00:00'
     x = pd.date_range(d, periods=len(y_true), freq='15min')
 
     fig = plt.figure()
@@ -220,7 +227,7 @@ def plot_results(y_true, y_pred, name):
 
 
 lag = 8
-config = {'batch': 50, 'epochs': 50}
+config = {'batch': 50, 'epochs': 200}
 data, sites = load_data()
 
 train_model()
