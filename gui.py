@@ -47,7 +47,7 @@ def main():
     lbl_end = tk.Label(window, text='Destination: ')
     drp_end = tk.OptionMenu(window, end, *INTERSECTIONS)
     btn_exit = tk.Button(window, text='exit', command=window.destroy)
-    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_route(hours.get() * 60 + minutes.get(), start.get(), end.get()))
+    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_route(int((hours.get() * 4) + (minutes.get() / 15)), start.get(), end.get()))
 
     # render widgets
     canvas.create_window(300, 20, window=lbl_heading)
@@ -65,7 +65,7 @@ def main():
 
 
 def calc_route(time, start, end):
-    print('Leaving at ', time, ', from ', start, '. Routing to... ', end)
+    print(f'Leaving at {time}, from {start} to {end}')
 
 
 main()
