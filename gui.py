@@ -18,13 +18,11 @@ def main():
         "983,ABBOTTS/REMINGTON",
     ]
 
-    HOURS = [
-        0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-    ]
+    HOURS = []
+    for i in range(0, 24):
+        HOURS.append(i)
 
-    MINUTES = []
-    for i in range(0, 59):
-        MINUTES.append(i)
+    MINUTES = [0, 15, 30, 45]
 
     hours = tk.IntVar(window)
     hours.set(HOURS[0])  # default value
