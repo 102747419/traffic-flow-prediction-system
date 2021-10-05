@@ -83,6 +83,7 @@ connections = {
 
 # print(get_connection(2825, 4030))
 
+
 def load_data():
     # Read data
     sites = pd.read_csv('data/scats-sites.csv')
@@ -116,45 +117,111 @@ def load_data():
 
 
 def process_data(data, lags):
-    # read data
-    site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
+    process_data = {}
 
-    # normalize data
-    scaler = MinMaxScaler((0, 1)).fit(site_data)
-    flow1 = scaler.transform(site_data).reshape(1, -1)[0]
-    flow2 = scaler.transform(site_data).reshape(1, -1)[0]
+    flattened_data = data.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
+    scaler = MinMaxScaler((0, 1)).fit(flattened_data)
 
-    flow1_copy = np.append(flow1, flow1)
-    flow2_copy = np.append(flow2, flow2)
+    for index, row in data.iterrows():
 
-    # group data into arrays of 8 elements (defined by lags variable)
-    train, test = [], []
-    for i in range(len(flow1), len(flow1_copy)):
-        arr = flow1_copy[i - lags: i + 1]
-        # np.insert(arr, 0, 0)
-        train.append(arr)
-    for i in range(len(flow2), len(flow2_copy)):
-        arr = flow2_copy[i - lags: i + 1]
-        # np.insert(arr, 0, 0)
-        test.append(arr)
+        # read data
+        id = row['SCATS Number']
+        site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
 
-    # shuffle training data
-    train = np.array(train)
-    test = np.array(test)
-    np.random.shuffle(train)
+        # normalize data
+        flow1 = scaler.transform(site_data).reshape(1, -1)[0]
+        flow2 = scaler.transform(site_data).reshape(1, -1)[0]
 
-    # separate label (y_...) from data (X_...)
-    X_train = train[:, :-1]
-    y_train = train[:, -1]
-    X_test = test[:, :-1]
-    y_test = test[:, -1]
+        flow1_copy = np.append(flow1, flow1)
+        flow2_copy = np.append(flow2, flow2)
 
-    # return scalar so it can be unscaled using scaler.inverse_transform()
-    return X_train, y_train, X_test, y_test, scaler
+        # group data into arrays of 8 elements (defined by lags variable)
+        train, test = [], []
+        for i in range(len(flow1), len(flow1_copy)):
+            arr = flow1_copy[i - lags: i + 1]
+            np.insert(arr, 0, id)
+            train.append(arr)
+        for i in range(len(flow2), len(flow2_copy)):
+            arr = flow2_copy[i - lags: i + 1]
+            np.insert(arr, 0, id)
+            test.append(arr)
+
+        # shuffle training data
+        train = np.array(train)
+        test = np.array(test)
+        np.random.shuffle(train)
+
+        # separate label (y_...) from data (X_...)
+        X_train = train[:, :-1]
+        y_train = train[:, -1]
+        X_test = test[:, :-1]
+        y_test = test[:, -1]
+
+        if id not in process_data:
+            process_data[id] = {
+                'X_train': np.empty(1),
+                'y_train': np.empty(1),
+                'X_test': np.empty(1),
+                'y_test': np.empty(1)
+            }
+
+        process_data[id]['X_train'] = np.append(process_data[id]['X_train'], X_train)
+        process_data[id]['y_train'] = np.append(process_data[id]['y_train'], y_train)
+        process_data[id]['X_test'] = np.append(process_data[id]['X_test'], X_test)
+        process_data[id]['y_test'] = np.append(process_data[id]['y_test'], y_test)
+
+    return process_data, scaler
+
+    # # read data
+    # site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
+
+    # # normalize data
+    # scaler = MinMaxScaler((0, 1)).fit(site_data)
+    # flow1 = scaler.transform(site_data).reshape(1, -1)[0]
+    # flow2 = scaler.transform(site_data).reshape(1, -1)[0]
+
+    # flow1_copy = np.append(flow1, flow1)
+    # flow2_copy = np.append(flow2, flow2)
+
+    # # group data into arrays of 8 elements (defined by lags variable)
+    # train, test = [], []
+    # for i in range(len(flow1), len(flow1_copy)):
+    #     arr = flow1_copy[i - lags: i + 1]
+    #     # np.insert(arr, 0, 0)
+    #     train.append(arr)
+    # for i in range(len(flow2), len(flow2_copy)):
+    #     arr = flow2_copy[i - lags: i + 1]
+    #     # np.insert(arr, 0, 0)
+    #     test.append(arr)
+
+    # # shuffle training data
+    # train = np.array(train)
+    # test = np.array(test)
+    # np.random.shuffle(train)
+
+    # # separate label (y_...) from data (X_...)
+    # X_train = train[:, :-1]
+    # y_train = train[:, -1]
+    # X_test = test[:, :-1]
+    # y_test = test[:, -1]
+
+    # # return scalar so it can be unscaled using scaler.inverse_transform()
+    # return X_train, y_train, X_test, y_test, scaler
 
 
 def train_model():
-    X_train, y_train, _, _, _ = process_data(data, lag)
+    processed_data, scaler = process_data(data, lag)
+
+    X_train = []
+    y_train = []
+
+    for key in processed_data:
+        item = processed_data[key]
+        X_train.extend(item['X_train'])
+        y_train.extend(item['y_train'])
+
+    X_train = np.array(X_train)
+    y_train = np.array(y_train)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
     model, name = get_gru([lag, 64, 64, 1])
@@ -181,15 +248,19 @@ def get_gru(units):
     return model, 'gru'
 
 
-def test_model():
+def test_model(id):
     # load the model
     model = save.load_model('model/gru.h5')
 
     # process the data
-    _, _, X_test, y_test, scaler = process_data(data, lag)
+    processed_data, scaler = process_data(data, lag)
+    X_test = processed_data[id]['X_test']
+    y_test = processed_data[id]['y_test']
 
     # unscale the test labels
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
+
+    print(y_test)
 
     # reshape the test data so it works with the model
     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
@@ -227,15 +298,15 @@ def plot_results(y_true, y_pred, name):
 
 
 lag = 8
-config = {'batch': 50, 'epochs': 200}
+config = {'batch': 50, 'epochs': 20}
 data, sites = load_data()
 
-train_model()
-test_model()
+# train_model()
+test_model(4034)
 
 # Show sites on map
-# fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
-#                         color_discrete_sequence=['fuchsia'], zoom=8)
-# fig.update_layout(mapbox_style='open-street-map')
-# fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
-# fig.show()
+fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
+                        color_discrete_sequence=['fuchsia'], zoom=8)
+fig.update_layout(mapbox_style='open-street-map')
+fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
+fig.show()
