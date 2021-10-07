@@ -10,63 +10,63 @@ from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
 
 
-class Intersection:
+# class Intersection:
 
-    def __init__(self, id, connections=[]) -> None:
-        self.id = id
-        self.connections = connections
+#     def __init__(self, id, connections=[]) -> None:
+#         self.id = id
+#         self.connections = connections
 
-    def find_intersection(self, connection):
-        connections.get(connection)
+#     def find_intersection(self, connection):
+#         connections.get(connection)
 
 
-connections = {
-    # 2825: Intersection(2825, [4030]),
-    # 2827: Intersection(2827, [4051]),
-    # 2820: Intersection(2820, [3662, 4321]),
-    # 4030: Intersection(4030, [4321]),
-    # 4063: Intersection(4063, [4057, 2200, 3127, 4034])
-    # 970: ,
-    # 2000: ,
-    # 2200: ,
-    # 2820: ,
-    # 2825: ,
-    # 2827: ,
-    # 2846: ,
-    # 3001: ,
-    # 3002: ,
-    # 3120: ,
-    # 3122: ,
-    # 3126: ,
-    # 3127: ,
-    # 3180: ,
-    # 3662: ,
-    # 3682: ,
-    # 3685: ,
-    # 3804: ,
-    # 3812: ,
-    # 4030: ,
-    # 4032: ,
-    # 4034: ,
-    # 4035: ,
-    # 4040: ,
-    # 4043: ,
-    # 4051: ,
-    # 4057: ,
-    # 4063: ,
-    # 4262: ,
-    # 4263: ,
-    # 4264: ,
-    # 4266: ,
-    # 4270: ,
-    # 4272: ,
-    # 4273: ,
-    # 4321: ,
-    # 4324: ,
-    # 4335: ,
-    # 4812: ,
-    # 4821
-}
+# connections = {
+#     # 2825: Intersection(2825, [4030]),
+#     # 2827: Intersection(2827, [4051]),
+#     # 2820: Intersection(2820, [3662, 4321]),
+#     # 4030: Intersection(4030, [4321]),
+#     # 4063: Intersection(4063, [4057, 2200, 3127, 4034])
+#     # 970: ,
+#     # 2000: ,
+#     # 2200: ,
+#     # 2820: ,
+#     # 2825: ,
+#     # 2827: ,
+#     # 2846: ,
+#     # 3001: ,
+#     # 3002: ,
+#     # 3120: ,
+#     # 3122: ,
+#     # 3126: ,
+#     # 3127: ,
+#     # 3180: ,
+#     # 3662: ,
+#     # 3682: ,
+#     # 3685: ,
+#     # 3804: ,
+#     # 3812: ,
+#     # 4030: ,
+#     # 4032: ,
+#     # 4034: ,
+#     # 4035: ,
+#     # 4040: ,
+#     # 4043: ,
+#     # 4051: ,
+#     # 4057: ,
+#     # 4063: ,
+#     # 4262: ,
+#     # 4263: ,
+#     # 4264: ,
+#     # 4266: ,
+#     # 4270: ,
+#     # 4272: ,
+#     # 4273: ,
+#     # 4321: ,
+#     # 4324: ,
+#     # 4335: ,
+#     # 4812: ,
+#     # 4821
+# }
 
 
 # def get_connection(scats_number: int, connection_number: int) -> Intersection:
@@ -82,6 +82,8 @@ connections = {
 
 
 # print(get_connection(2825, 4030))
+
+intersections = []
 
 
 def load_data():
@@ -292,11 +294,20 @@ lag = 8
 config = {'batch': 50, 'epochs': 20}
 data, sites = load_data()
 
+unique_connections = data.drop_duplicates("id")
+scats_numbers = unique_connections["SCATS Number"].unique()
+
+for id in scats_numbers:
+    connections = unique_connections[unique_connections["SCATS Number"] == id]
+    mean_latitude = connections["NB_LATITUDE"].mean()
+    mean_longitude = connections["NB_LONGITUDE"].mean()
+    intersections.append((id, mean_latitude, mean_longitude))
+
 # train_model()
 test_model(4034)
 
 # Show sites on map
-fig = px.scatter_mapbox(data, lat='NB_LATITUDE', lon='NB_LONGITUDE', hover_name='Location', hover_data=['SCATS Number', 'id'],
+fig = px.scatter_mapbox(data, lat=[x[1] for x in intersections], lon=[x[2] for x in intersections], hover_name=[x[0] for x in intersections],
                         color_discrete_sequence=['fuchsia'], zoom=8)
 fig.update_layout(mapbox_style='open-street-map')
 fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
