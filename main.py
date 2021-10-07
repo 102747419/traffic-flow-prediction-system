@@ -117,12 +117,18 @@ def load_data():
 
 
 def process_data(data, lags):
-    process_data = {}
-
     flattened_data = data.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
 
+    arr_X_train = []
+    arr_y_train = []
+    arr_X_test = []
+    arr_y_test = []
+
     for index, row in data.iterrows():
+        # TEMPORARY SO ITS FASTER TO TEST
+        if index > 100:
+            break
 
         # read data
         id = row['SCATS Number']
@@ -157,20 +163,17 @@ def process_data(data, lags):
         X_test = test[:, :-1]
         y_test = test[:, -1]
 
-        if id not in process_data:
-            process_data[id] = {
-                'X_train': np.empty(1),
-                'y_train': np.empty(1),
-                'X_test': np.empty(1),
-                'y_test': np.empty(1)
-            }
+        arr_X_train.extend(X_train)
+        arr_y_train.extend(y_train)
+        arr_X_test.extend(X_test)
+        arr_y_test.extend(y_test)
 
-        process_data[id]['X_train'] = np.append(process_data[id]['X_train'], X_train)
-        process_data[id]['y_train'] = np.append(process_data[id]['y_train'], y_train)
-        process_data[id]['X_test'] = np.append(process_data[id]['X_test'], X_test)
-        process_data[id]['y_test'] = np.append(process_data[id]['y_test'], y_test)
+    arr_X_train = np.array(arr_X_train)
+    arr_y_train = np.array(arr_y_train)
+    arr_X_test = np.array(arr_X_test)
+    arr_y_test = np.array(arr_y_test)
 
-    return process_data, scaler
+    return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
     # # read data
     # site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
@@ -210,18 +213,7 @@ def process_data(data, lags):
 
 
 def train_model():
-    processed_data, scaler = process_data(data, lag)
-
-    X_train = []
-    y_train = []
-
-    for key in processed_data:
-        item = processed_data[key]
-        X_train.extend(item['X_train'])
-        y_train.extend(item['y_train'])
-
-    X_train = np.array(X_train)
-    y_train = np.array(y_train)
+    X_train, y_train, _, _, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
     model, name = get_gru([lag, 64, 64, 1])
@@ -253,14 +245,10 @@ def test_model(id):
     model = save.load_model('model/gru.h5')
 
     # process the data
-    processed_data, scaler = process_data(data, lag)
-    X_test = processed_data[id]['X_test']
-    y_test = processed_data[id]['y_test']
+    _, _, X_test, y_test, scaler = process_data(data, lag)
 
     # unscale the test labels
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
-
-    print(y_test)
 
     # reshape the test data so it works with the model
     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
@@ -276,14 +264,17 @@ def test_model(id):
 
 
 def plot_results(y_true, y_pred, name):
+    day = 1
+    data_range = range(day * 96, (day + 1) * 96)
+
     d = '2016-10-1 00:00'
-    x = pd.date_range(d, periods=len(y_true), freq='15min')
+    x = pd.date_range(d, periods=len(y_true[data_range]), freq='15min')
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(x, y_true, label='True Data')
-    ax.plot(x, y_pred, label=name)
+    ax.plot(x, y_true[data_range], label='True Data')
+    ax.plot(x, y_pred[data_range], label=name)
 
     plt.legend()
     plt.grid(True)
