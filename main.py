@@ -92,11 +92,24 @@ def process_data(data, lags):
     flattened_data = data.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
 
-    arr_X_train = []
-    arr_y_train = []
-    arr_X_test = []
-    arr_y_test = []
+    train, test, validation = split_data(data)
 
+    arr_x_train, arr_y_train = process_datapool(train, lags, scaler, True)
+    arr_x_test, arr_y_test = process_datapool(test, lags, scaler, False)
+    arr_x_valid, arr_y_valid = process_datapool(validation, lags, scaler, False)
+
+    # Convert to numpy arrays
+    arr_x_train = np.array(arr_x_train)
+    arr_y_train = np.array(arr_y_train)
+    arr_x_test = np.array(arr_x_test)
+    arr_y_test = np.array(arr_y_test)
+    arr_x_valid = np.array(arr_x_valid)
+    arr_y_valid = np.array(arr_y_valid)
+
+    return arr_x_train, arr_y_train, arr_x_test, arr_y_test, arr_x_valid, arr_y_valid, scaler
+
+
+def process_datapool(data, lags, scaler, shuffle):
     for index, row in data.iterrows():
         # TEMPORARY SO ITS FASTER TO TEST
         if index > 100:
@@ -114,78 +127,56 @@ def process_data(data, lags):
         flow2_copy = np.append(flow2, flow2)
 
         # group data into arrays of 8 elements (defined by lags variable)
-        train, test = [], []
+        container = [], []
         for i in range(len(flow1), len(flow1_copy)):
             arr = flow1_copy[i - lags: i + 1]
             np.insert(arr, 0, id)
-            train.append(arr)
-        for i in range(len(flow2), len(flow2_copy)):
-            arr = flow2_copy[i - lags: i + 1]
-            np.insert(arr, 0, id)
-            test.append(arr)
+            container.append(arr)
 
         # shuffle training data
-        train = np.array(train)
-        test = np.array(test)
-        np.random.shuffle(train)
+        container = np.array(container)
+        if (shuffle):
+            np.random.shuffle(container)
 
         # separate label (y_...) from data (X_...)
-        X_train = train[:, :-1]
-        y_train = train[:, -1]
-        X_test = test[:, :-1]
-        y_test = test[:, -1]
+        X = container[:, :-1]
+        Y = container[:, -1]
 
-        arr_X_train.extend(X_train)
-        arr_y_train.extend(y_train)
-        arr_X_test.extend(X_test)
-        arr_y_test.extend(y_test)
+        x = [], []
+        y = [], []
 
-    arr_X_train = np.array(arr_X_train)
-    arr_y_train = np.array(arr_y_train)
-    arr_X_test = np.array(arr_X_test)
-    arr_y_test = np.array(arr_y_test)
+        x.extend(X)
+        y.extend(Y)
 
-    return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
+        return x, y
 
-    # # read data
-    # site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
 
-    # # normalize data
-    # scaler = MinMaxScaler((0, 1)).fit(site_data)
-    # flow1 = scaler.transform(site_data).reshape(1, -1)[0]
-    # flow2 = scaler.transform(site_data).reshape(1, -1)[0]
+def split_data(data):
+    count = 0
+    prev_id = data.iloc[0].iloc[0]
 
-    # flow1_copy = np.append(flow1, flow1)
-    # flow2_copy = np.append(flow2, flow2)
+    train = [], []
+    test = [], []
+    validation = [], []
 
-    # # group data into arrays of 8 elements (defined by lags variable)
-    # train, test = [], []
-    # for i in range(len(flow1), len(flow1_copy)):
-    #     arr = flow1_copy[i - lags: i + 1]
-    #     # np.insert(arr, 0, 0)
-    #     train.append(arr)
-    # for i in range(len(flow2), len(flow2_copy)):
-    #     arr = flow2_copy[i - lags: i + 1]
-    #     # np.insert(arr, 0, 0)
-    #     test.append(arr)
+    for i, row in data.iterrows():
+        id = row.iloc[0]
+        if id != prev_id:
+            prev_id = id
+            count = 0
 
-    # # shuffle training data
-    # train = np.array(train)
-    # test = np.array(test)
-    # np.random.shuffle(train)
+        if count < 7:
+            train.append(row)
+        elif count < 9:
+            validation.append(row)
+        else:
+            train.append(row)
 
-    # # separate label (y_...) from data (X_...)
-    # X_train = train[:, :-1]
-    # y_train = train[:, -1]
-    # X_test = test[:, :-1]
-    # y_test = test[:, -1]
-
-    # # return scalar so it can be unscaled using scaler.inverse_transform()
-    # return X_train, y_train, X_test, y_test, scaler
+    return train, test, validation
 
 
 def train_model():
-    X_train, y_train, _, _, _ = process_data(data, lag)
+    X_train, y_train, _, _, X_valid, y_valid, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
     model, name = get_gru([lag, 64, 64, 1])
@@ -195,7 +186,7 @@ def train_model():
         X_train, y_train,
         batch_size=config['batch'],
         epochs=config['epochs'],
-        validation_split=0.05)
+        validation_data=(X_valid, y_valid))
 
     model.save('model/' + name + '.h5')
     df = pd.DataFrame.from_dict(hist.history)
@@ -210,6 +201,9 @@ def get_gru(units):
     model.add(Dense(units[3], activation='sigmoid'))
 
     return model, 'gru'
+
+
+def get_
 
 
 def test_model(id):
