@@ -59,7 +59,7 @@ intersections = []
 def load_data():
     # Read data
     sites = pd.read_csv('data/scats-sites.csv')
-    data = pd.read_csv('data/scats-data.csv')
+    data = pd.read_csv('data/scats-data-test.csv')
 
     # Filter interseciton sites
     sites = sites[sites['Site Type'].eq('INT')]
@@ -94,6 +94,10 @@ def process_data(data, lags):
 
     train, test, validation = split_data(data)
 
+    arr_x_train, arr_y_train = [], []
+
+    test_arr = [], []
+
     arr_x_train, arr_y_train = process_datapool(train, lags, scaler, True)
     arr_x_test, arr_y_test = process_datapool(test, lags, scaler, False)
     arr_x_valid, arr_y_valid = process_datapool(validation, lags, scaler, False)
@@ -110,11 +114,10 @@ def process_data(data, lags):
 
 
 def process_datapool(data, lags, scaler, shuffle):
-    for index, row in data.iterrows():
-        # TEMPORARY SO ITS FASTER TO TEST
-        if index > 100:
-            break
+    x = []
+    y = []
 
+    for index, row in data.iterrows():
         # read data
         id = row['SCATS Number']
         site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
@@ -127,7 +130,7 @@ def process_datapool(data, lags, scaler, shuffle):
         flow2_copy = np.append(flow2, flow2)
 
         # group data into arrays of 8 elements (defined by lags variable)
-        container = [], []
+        container = []
         for i in range(len(flow1), len(flow1_copy)):
             arr = flow1_copy[i - lags: i + 1]
             np.insert(arr, 0, id)
@@ -142,22 +145,19 @@ def process_datapool(data, lags, scaler, shuffle):
         X = container[:, :-1]
         Y = container[:, -1]
 
-        x = [], []
-        y = [], []
-
         x.extend(X)
         y.extend(Y)
 
-        return x, y
+    return x, y
 
 
 def split_data(data):
     count = 0
     prev_id = data.iloc[0].iloc[0]
 
-    train = [], []
-    test = [], []
-    validation = [], []
+    train = pd.DataFrame()
+    test = pd.DataFrame()
+    validation = pd.DataFrame()
 
     for i, row in data.iterrows():
         id = row.iloc[0]
@@ -166,11 +166,11 @@ def split_data(data):
             count = 0
 
         if count < 7:
-            train.append(row)
+            test = test.append(row, ignore_index=True)
         elif count < 9:
-            validation.append(row)
+            validation = validation.append(row, ignore_index=True)
         else:
-            train.append(row)
+            train = train.append(row, ignore_index=True)
 
     return train, test, validation
 
@@ -201,9 +201,6 @@ def get_gru(units):
     model.add(Dense(units[3], activation='sigmoid'))
 
     return model, 'gru'
-
-
-def get_
 
 
 def test_model(id):
@@ -267,7 +264,7 @@ for id in scats_numbers:
     mean_longitude = connections["NB_LONGITUDE"].mean()
     intersections.append((id, mean_latitude, mean_longitude))
 
-# train_model()
+train_model()
 test_model(4034)
 
 # Show sites on map
