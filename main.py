@@ -4,9 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-from keras.backend import sqrt
 from keras.layers import Dense, Dropout
 from keras.layers.recurrent import GRU
 from keras.models import Sequential
@@ -348,9 +346,6 @@ print(travel_time)
 
 # Show sites on map
 intersection_values = list(intersections.values())
-# fig = px.scatter_mapbox(data, lat=[x[1] for x in intersection_values], lon=[x[2] for x in intersection_values], hover_name=[x[0] for x in intersection_values],
-#                         color_discrete_sequence=["fuchsia"], zoom=8)
-
 fig = go.Figure(go.Scattermapbox(
     name="Intersections",
     mode="markers",
