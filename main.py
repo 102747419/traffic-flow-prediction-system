@@ -61,19 +61,19 @@ intersections = {}
 
 def load_data():
     # Read data
-    sites = pd.read_csv('data/scats-sites.csv')
-    data = pd.read_csv('data/scats-data.csv')
+    sites = pd.read_csv("data/scats-sites.csv")
+    data = pd.read_csv("data/scats-data.csv")
 
     # Filter interseciton sites
-    sites = sites[sites['Site Type'].eq('INT')]
-    data = data[data['SCATS Number'].isin(sites['Site Number'])]
+    sites = sites[sites["Site Type"].eq("INT")]
+    data = data[data["SCATS Number"].isin(sites["Site Number"])]
 
     # Filter out data at (0,0)
-    # data = data[(data['NB_LATITUDE'] != 0) & (data['NB_LONGITUDE'] != 0)]
+    # data = data[(data["NB_LATITUDE"] != 0) & (data["NB_LONGITUDE"] != 0)]
 
     # Offset positions to align with map
-    data['NB_LATITUDE'] = data['NB_LATITUDE'].add(0.0015)
-    data['NB_LONGITUDE'] = data['NB_LONGITUDE'].add(0.0013)
+    data["NB_LATITUDE"] = data["NB_LATITUDE"].add(0.0015)
+    data["NB_LONGITUDE"] = data["NB_LONGITUDE"].add(0.0013)
 
     # Assign unique ID to connections
     prev = None
@@ -81,12 +81,12 @@ def load_data():
     col = []
 
     for i, row in data.iterrows():
-        if row['Location'] != prev:
-            prev = row['Location']
+        if row["Location"] != prev:
+            prev = row["Location"]
             index += 1
         col.append(index)
 
-    data.insert(0, 'id', col)
+    data.insert(0, "id", col)
 
     return data, sites
 
@@ -106,7 +106,7 @@ def process_data(data, lags):
             break
 
         # read data
-        id = row['SCATS Number']
+        id = row["SCATS Number"]
         site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
 
         # normalize data
@@ -151,7 +151,7 @@ def process_data(data, lags):
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
     # # read data
-    # site_data = data[data['id'] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
+    # site_data = data[data["id"] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
 
     # # normalize data
     # scaler = MinMaxScaler((0, 1)).fit(site_data)
@@ -193,16 +193,16 @@ def train_model():
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
     model, name = get_gru([lag, 64, 64, 1])
 
-    model.compile(loss='mse', optimizer='rmsprop', metrics=['mape'])
+    model.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
     hist = model.fit(
         X_train, y_train,
-        batch_size=config['batch'],
-        epochs=config['epochs'],
+        batch_size=config["batch"],
+        epochs=config["epochs"],
         validation_split=0.05)
 
-    model.save('model/' + name + '.h5')
+    model.save("model/" + name + ".h5")
     df = pd.DataFrame.from_dict(hist.history)
-    df.to_csv('model/' + name + ' loss.csv', encoding='utf-8', index=False)
+    df.to_csv("model/" + name + " loss.csv", encoding="utf-8", index=False)
 
 
 def get_gru(units):
@@ -210,14 +210,14 @@ def get_gru(units):
     model.add(GRU(units[1], input_shape=(units[0], 1), return_sequences=True))
     model.add(GRU(units[2]))
     model.add(Dropout(0.2))
-    model.add(Dense(units[3], activation='sigmoid'))
+    model.add(Dense(units[3], activation="sigmoid"))
 
-    return model, 'gru'
+    return model, "gru"
 
 
 def test_model(id):
     # load the model
-    model = save.load_model('model/gru.h5')
+    model = save.load_model("model/gru.h5")
 
     # process the data
     _, _, X_test, y_test, scaler = process_data(data, lag)
@@ -235,28 +235,28 @@ def test_model(id):
     predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
     # plot results!
-    plot_results(y_test, predicted, 'gru')
+    plot_results(y_test, predicted, "gru")
 
 
 def plot_results(y_true, y_pred, name):
     day = 1
     data_range = range(day * 96, (day + 1) * 96)
 
-    d = '2016-10-1 00:00'
-    x = pd.date_range(d, periods=len(y_true[data_range]), freq='15min')
+    d = "2016-10-1 00:00"
+    x = pd.date_range(d, periods=len(y_true[data_range]), freq="15min")
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.plot(x, y_true[data_range], label='True Data')
+    ax.plot(x, y_true[data_range], label="True Data")
     ax.plot(x, y_pred[data_range], label=name)
 
     plt.legend()
     plt.grid(True)
-    plt.xlabel('Time of Day')
-    plt.ylabel('Flow')
+    plt.xlabel("Time of Day")
+    plt.ylabel("Flow")
 
-    date_format = mpl.dates.DateFormatter('%H:%M')
+    date_format = mpl.dates.DateFormatter("%H:%M")
     ax.xaxis.set_major_formatter(date_format)
     fig.autofmt_xdate()
 
@@ -324,7 +324,7 @@ def travel_time_mins(route):
 
 
 lag = 8
-config = {'batch': 50, 'epochs': 20}
+config = {"batch": 50, "epochs": 20}
 data, sites = load_data()
 
 unique_connections = data.drop_duplicates("id")
@@ -349,18 +349,18 @@ print(travel_time)
 # Show sites on map
 intersection_values = list(intersections.values())
 # fig = px.scatter_mapbox(data, lat=[x[1] for x in intersection_values], lon=[x[2] for x in intersection_values], hover_name=[x[0] for x in intersection_values],
-#                         color_discrete_sequence=['fuchsia'], zoom=8)
+#                         color_discrete_sequence=["fuchsia"], zoom=8)
 
 fig = go.Figure(go.Scattermapbox(
     mode="markers",
     lon=[x[2] for x in intersection_values],
     lat=[x[1] for x in intersection_values],
-    marker={'size': 10}))
+    marker={"size": 10}))
 fig.add_trace(go.Scattermapbox(
     mode="markers+lines",
     lon=[intersections[x][2] for x in route],
     lat=[intersections[x][1] for x in route],
-    marker={'size': 10}))
-fig.update_layout(mapbox_style='open-street-map')
-fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
+    marker={"size": 10}, line={"color": "Red", "width": 4}))
+fig.update_layout(mapbox_style="open-street-map")
+fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 fig.show()
