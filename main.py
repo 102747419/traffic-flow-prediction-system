@@ -320,7 +320,7 @@ def total_distance_km(route):
 
 
 def travel_time_mins(route):
-    return total_distance_km(route) + len(route) * 0.5
+    return total_distance_km(route) + (len(route) - 1) * 0.5
 
 
 lag = 8
