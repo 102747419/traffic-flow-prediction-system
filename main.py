@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from keras.backend import sqrt
 from keras.layers import Dense, Dropout
 from keras.layers.recurrent import GRU
@@ -347,8 +348,19 @@ print(travel_time)
 
 # Show sites on map
 intersection_values = list(intersections.values())
-fig = px.scatter_mapbox(data, lat=[x[1] for x in intersection_values], lon=[x[2] for x in intersection_values], hover_name=[x[0] for x in intersection_values],
-                        color_discrete_sequence=['fuchsia'], zoom=8)
+# fig = px.scatter_mapbox(data, lat=[x[1] for x in intersection_values], lon=[x[2] for x in intersection_values], hover_name=[x[0] for x in intersection_values],
+#                         color_discrete_sequence=['fuchsia'], zoom=8)
+
+fig = go.Figure(go.Scattermapbox(
+    mode="markers",
+    lon=[x[2] for x in intersection_values],
+    lat=[x[1] for x in intersection_values],
+    marker={'size': 10}))
+fig.add_trace(go.Scattermapbox(
+    mode="markers+lines",
+    lon=[intersections[x][2] for x in route],
+    lat=[intersections[x][1] for x in route],
+    marker={'size': 10}))
 fig.update_layout(mapbox_style='open-street-map')
 fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
 fig.show()
