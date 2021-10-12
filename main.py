@@ -352,11 +352,13 @@ intersection_values = list(intersections.values())
 #                         color_discrete_sequence=["fuchsia"], zoom=8)
 
 fig = go.Figure(go.Scattermapbox(
+    name="Intersections",
     mode="markers",
     lon=[x[2] for x in intersection_values],
     lat=[x[1] for x in intersection_values],
     marker={"size": 10}))
 fig.add_trace(go.Scattermapbox(
+    name="Route 1",
     mode="markers+lines",
     lon=[intersections[x][2] for x in route],
     lat=[intersections[x][1] for x in route],
