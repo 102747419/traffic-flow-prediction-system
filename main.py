@@ -10,7 +10,7 @@ from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
 
 
-connections = {
+graph = {
     970: [2846, 3685],
     2000: [4043, 3685, 3682],
     2200: [4063],
@@ -260,6 +260,35 @@ def plot_results(y_true, y_pred, name):
     plt.show()
 
 
+# https://stackoverflow.com/a/8922151/10456572
+def dfs(start_id, dest_id):
+    # maintain a queue of paths
+    queue = []
+
+    # push the first path into the queue
+    queue.append([start_id])
+
+    while queue:
+        # get the first path from the queue
+        path = queue.pop(0)
+
+        # get the last node from the path
+        node = path[-1]
+
+        # path found
+        if node == dest_id:
+            return path
+
+        # enumerate all adjacent nodes, construct a
+        # new path and push it into the queue
+        for adjacent in graph.get(node, []):
+            new_path = list(path)
+            new_path.append(adjacent)
+            queue.append(new_path)
+
+    return None
+
+
 lag = 8
 config = {'batch': 50, 'epochs': 20}
 data, sites = load_data()
@@ -275,6 +304,8 @@ for id in scats_numbers:
 
 # train_model()
 test_model(4034)
+route = dfs(970, 4030)
+print(route)
 
 # Show sites on map
 fig = px.scatter_mapbox(data, lat=[x[1] for x in intersections], lon=[x[2] for x in intersections], hover_name=[x[0] for x in intersections],
