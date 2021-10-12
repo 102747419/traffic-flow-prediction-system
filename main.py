@@ -1,14 +1,16 @@
+import math
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from keras.backend import sqrt
 from keras.layers import Dense, Dropout
 from keras.layers.recurrent import GRU
 from keras.models import Sequential
 from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
-
 
 graph = {
     970: [2846, 3685],
@@ -53,7 +55,7 @@ graph = {
     4821: [3001]
 }
 
-intersections = []
+intersections = {}
 
 
 def load_data():
@@ -289,6 +291,37 @@ def dfs(start_id, dest_id):
     return None
 
 
+def distance_km(a_id, b_id):
+    a = intersections[a_id]
+    b = intersections[b_id]
+
+    a_x = a[2]
+    a_y = a[1]
+
+    b_x = b[2]
+    b_y = b[1]
+
+    diff_x = a_x - b_x
+    diff_y = a_y - b_y
+
+    return math.sqrt(diff_x ** 2 + diff_y ** 2) * 111
+
+
+def total_distance_km(route):
+    dist = 0
+
+    for index, id in enumerate(route[:-1]):
+        a = route[index]
+        b = route[index + 1]
+        dist += distance_km(a, b)
+
+    return dist
+
+
+def travel_time_mins(route):
+    return total_distance_km(route) + len(route) * 0.5
+
+
 lag = 8
 config = {'batch': 50, 'epochs': 20}
 data, sites = load_data()
@@ -300,15 +333,21 @@ for id in scats_numbers:
     connections = unique_connections[unique_connections["SCATS Number"] == id]
     mean_latitude = connections["NB_LATITUDE"].mean()
     mean_longitude = connections["NB_LONGITUDE"].mean()
-    intersections.append((id, mean_latitude, mean_longitude))
+    intersections[id] = (id, mean_latitude, mean_longitude)
 
 # train_model()
 test_model(4034)
 route = dfs(970, 4030)
+distance = total_distance_km(route)
+travel_time = travel_time_mins(route)
+
 print(route)
+print(distance)
+print(travel_time)
 
 # Show sites on map
-fig = px.scatter_mapbox(data, lat=[x[1] for x in intersections], lon=[x[2] for x in intersections], hover_name=[x[0] for x in intersections],
+intersection_values = list(intersections.values())
+fig = px.scatter_mapbox(data, lat=[x[1] for x in intersection_values], lon=[x[2] for x in intersection_values], hover_name=[x[0] for x in intersection_values],
                         color_discrete_sequence=['fuchsia'], zoom=8)
 fig.update_layout(mapbox_style='open-street-map')
 fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
