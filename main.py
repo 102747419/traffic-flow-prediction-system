@@ -1,6 +1,5 @@
 import math
 
-import astar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +10,8 @@ from keras.layers.recurrent import GRU
 from keras.models import Sequential
 from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
+
+import astar
 
 graph = {
     970: [2846, 3685],
@@ -296,19 +297,11 @@ def a_star(start_id, dest_id):
         for n1 in graph[n]:
             yield n1
 
-    def distance(n1, n2):
-        for n in graph[n1]:
-            if n == n2:
-                return 1
-
-    def cost(n, goal):
-        return 1
-
     path = list(astar.find_path(
         start_id, dest_id,
         neighbors_fnct=neighbors,
-        heuristic_cost_estimate_fnct=cost,
-        distance_between_fnct=distance))
+        heuristic_cost_estimate_fnct=travel_time_mins,
+        distance_between_fnct=travel_time_mins))
 
     return path
 
@@ -340,7 +333,11 @@ def total_distance_km(route):
     return dist
 
 
-def travel_time_mins(route):
+def travel_time_mins(a_id, b_id):
+    return distance_km(a_id, b_id) + 0.5
+
+
+def total_travel_time_mins(route):
     return total_distance_km(route) + (len(route) - 1) * 0.5
 
 
@@ -361,7 +358,7 @@ for id in scats_numbers:
 test_model(4034)
 route = a_star(970, 4030)
 distance = total_distance_km(route)
-travel_time = travel_time_mins(route)
+travel_time = total_travel_time_mins(route)
 
 print(route)
 print(distance)
