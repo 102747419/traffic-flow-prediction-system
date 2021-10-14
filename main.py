@@ -292,18 +292,49 @@ def dfs(start_id, dest_id):
     return None
 
 
-def a_star(start_id, dest_id):
+def a_star(start_id, dest_id, visited):
     def neighbors(n):
         for n1 in graph[n]:
             yield n1
+
+    def distance(n1, n2):
+        added_cost = 0
+        if n2 in visited:
+            added_cost = math.log2(visited[n2] / 60 + 1)
+
+        return travel_time_mins(n1, n2) + added_cost
 
     path = list(astar.find_path(
         start_id, dest_id,
         neighbors_fnct=neighbors,
         heuristic_cost_estimate_fnct=travel_time_mins,
-        distance_between_fnct=travel_time_mins))
+        distance_between_fnct=distance))
 
     return path
+
+
+def a_star_multiple(start_id, dest_id, routes=5, tries=500):
+    solutions = []
+    visited = {}
+
+    for i in range(tries):
+        route = a_star(start_id, dest_id, visited)
+
+        # only add solution if it is unique
+        if route not in solutions:
+            solutions.append(route)
+
+        for id in route:
+            if id not in visited:
+                visited[id] = 1
+            else:
+                visited[id] += 1
+
+        # ensure max routes isnt exceeded
+        if len(solutions) == routes:
+            break
+
+    return solutions
 
 
 def distance_km(a_id, b_id):
@@ -356,13 +387,7 @@ for id in scats_numbers:
 
 # train_model()
 test_model(4034)
-route = a_star(970, 4030)
-distance = total_distance_km(route)
-travel_time = total_travel_time_mins(route)
-
-print(route)
-print(distance)
-print(travel_time)
+routes = a_star_multiple(4040, 4030)
 
 # Show sites on map
 intersection_values = list(intersections.values())
@@ -372,12 +397,24 @@ fig = go.Figure(go.Scattermapbox(
     lon=[x[2] for x in intersection_values],
     lat=[x[1] for x in intersection_values],
     marker={"size": 10}))
-fig.add_trace(go.Scattermapbox(
-    name="Route 1",
-    mode="markers+lines",
-    lon=[intersections[x][2] for x in route],
-    lat=[intersections[x][1] for x in route],
-    marker={"size": 10}, line={"color": "Red", "width": 4}))
+
+for i, route in enumerate(routes):
+    distance = total_distance_km(route)
+    travel_time = total_travel_time_mins(route)
+
+    print("===== Route " + str(i + 1) + " =====")
+    print("Route:", route)
+    print("Distance (km):  ", distance)
+    print("Duration (mins):", travel_time)
+
+    fig.add_trace(go.Scattermapbox(
+        name="Route " + str(i + 1),
+        mode="markers+lines",
+        lon=[intersections[x][2] for x in route],
+        lat=[intersections[x][1] for x in route],
+        marker={"size": 10}, line={"width": 4}))
+
+
 fig.update_layout(mapbox_style="open-street-map")
 fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 fig.show()
