@@ -1,5 +1,6 @@
 import math
 
+import astar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -290,6 +291,28 @@ def dfs(start_id, dest_id):
     return None
 
 
+def a_star(start_id, dest_id):
+    def neighbors(n):
+        for n1 in graph[n]:
+            yield n1
+
+    def distance(n1, n2):
+        for n in graph[n1]:
+            if n == n2:
+                return 1
+
+    def cost(n, goal):
+        return 1
+
+    path = list(astar.find_path(
+        start_id, dest_id,
+        neighbors_fnct=neighbors,
+        heuristic_cost_estimate_fnct=cost,
+        distance_between_fnct=distance))
+
+    return path
+
+
 def distance_km(a_id, b_id):
     a = intersections[a_id]
     b = intersections[b_id]
@@ -336,7 +359,7 @@ for id in scats_numbers:
 
 # train_model()
 test_model(4034)
-route = dfs(970, 4030)
+route = a_star(970, 4030)
 distance = total_distance_km(route)
 travel_time = travel_time_mins(route)
 
