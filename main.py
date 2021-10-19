@@ -61,7 +61,7 @@ intersections = {}
 
 
 def load_data():
-    # Read data
+    # Read data from csv files
     sites = pd.read_csv("data/scats-sites.csv")
     data = pd.read_csv("data/scats-data.csv")
 
@@ -102,18 +102,18 @@ def process_data(data, lags):
     arr_y_test = []
 
     for index, row in data.iterrows():
-        # read data
+        # Read data
         id = row["SCATS Number"]
         site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
 
-        # normalize data
+        # Normalize data
         flow1 = scaler.transform(site_data).reshape(1, -1)[0]
         flow2 = scaler.transform(site_data).reshape(1, -1)[0]
 
         flow1_copy = np.append(flow1, flow1)
         flow2_copy = np.append(flow2, flow2)
 
-        # group data into arrays of 8 elements (defined by lags variable)
+        # Group data into arrays of 8 elements (defined by lags variable)
         train, test = [], []
         for i in range(len(flow1), len(flow1_copy)):
             arr = flow1_copy[i - lags: i + 1]
@@ -124,64 +124,30 @@ def process_data(data, lags):
             np.insert(arr, 0, id)
             test.append(arr)
 
-        # shuffle training data
+        # Shuffle training data
         train = np.array(train)
         test = np.array(test)
         np.random.shuffle(train)
 
-        # separate label (y_...) from data (X_...)
+        # Separate label (y_...) from data (X_...)
         X_train = train[:, :-1]
         y_train = train[:, -1]
         X_test = test[:, :-1]
         y_test = test[:, -1]
 
+        # Add to the rest of the data
         arr_X_train.extend(X_train)
         arr_y_train.extend(y_train)
         arr_X_test.extend(X_test)
         arr_y_test.extend(y_test)
 
+    # Convert to numpy arrays
     arr_X_train = np.array(arr_X_train)
     arr_y_train = np.array(arr_y_train)
     arr_X_test = np.array(arr_X_test)
     arr_y_test = np.array(arr_y_test)
 
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
-
-    # # read data
-    # site_data = data[data["id"] == 0].iloc[:, 11:].iloc[0].to_numpy().reshape(-1, 1)
-
-    # # normalize data
-    # scaler = MinMaxScaler((0, 1)).fit(site_data)
-    # flow1 = scaler.transform(site_data).reshape(1, -1)[0]
-    # flow2 = scaler.transform(site_data).reshape(1, -1)[0]
-
-    # flow1_copy = np.append(flow1, flow1)
-    # flow2_copy = np.append(flow2, flow2)
-
-    # # group data into arrays of 8 elements (defined by lags variable)
-    # train, test = [], []
-    # for i in range(len(flow1), len(flow1_copy)):
-    #     arr = flow1_copy[i - lags: i + 1]
-    #     # np.insert(arr, 0, 0)
-    #     train.append(arr)
-    # for i in range(len(flow2), len(flow2_copy)):
-    #     arr = flow2_copy[i - lags: i + 1]
-    #     # np.insert(arr, 0, 0)
-    #     test.append(arr)
-
-    # # shuffle training data
-    # train = np.array(train)
-    # test = np.array(test)
-    # np.random.shuffle(train)
-
-    # # separate label (y_...) from data (X_...)
-    # X_train = train[:, :-1]
-    # y_train = train[:, -1]
-    # X_test = test[:, :-1]
-    # y_test = test[:, -1]
-
-    # # return scalar so it can be unscaled using scaler.inverse_transform()
-    # return X_train, y_train, X_test, y_test, scaler
 
 
 def train_model():
@@ -262,25 +228,24 @@ def plot_results(y_true, y_pred, name):
 
 # https://stackoverflow.com/a/8922151/10456572
 def dfs(start_id, dest_id):
-    # maintain a queue of paths
+    # Maintain a queue of paths
     queue = []
 
-    # push the first path into the queue
+    # Push the first path into the queue
     queue.append([start_id])
 
     while queue:
-        # get the first path from the queue
+        # Get the first path from the queue
         path = queue.pop(0)
 
-        # get the last node from the path
+        # Get the last node from the path
         node = path[-1]
 
-        # path found
+        # Path found
         if node == dest_id:
             return path
 
-        # enumerate all adjacent nodes, construct a
-        # new path and push it into the queue
+        # Enumerate all adjacent nodes, construct a new path and push it into the queue
         for adjacent in graph.get(node, []):
             new_path = list(path)
             new_path.append(adjacent)
@@ -317,17 +282,18 @@ def a_star_multiple(start_id, dest_id, routes=5, tries=500):
     for i in range(tries):
         route = a_star(start_id, dest_id, visited)
 
-        # only add solution if it is unique
+        # Only add solution if it is unique
         if route not in solutions:
             solutions.append(route)
 
+        # Increment visited count
         for id in route:
             if id not in visited:
                 visited[id] = 1
             else:
                 visited[id] += 1
 
-        # ensure max routes isnt exceeded
+        # Ensure max routes isnt exceeded
         if len(solutions) == routes:
             break
 
@@ -343,24 +309,19 @@ def distance_km(a_id, b_id):
     a = intersections[a_id]
     b = intersections[b_id]
 
-    a_x = a[2]
-    a_y = a[1]
+    delta_x = a[2] - b[2]
+    delta_y = a[1] - b[1]
 
-    b_x = b[2]
-    b_y = b[1]
-
-    diff_x = a_x - b_x
-    diff_y = a_y - b_y
-
-    return math.sqrt(diff_x ** 2 + diff_y ** 2) * 111
+    # 1 degree latitude/longitude = 111km
+    return math.sqrt(delta_x ** 2 + delta_y ** 2) * 111
 
 
 def total_distance_km(route):
     dist = 0
 
-    for index, id in enumerate(route[:-1]):
-        a = route[index]
-        b = route[index + 1]
+    for i in range(len(route) - 1):
+        a = route[i]
+        b = route[i + 1]
         dist += distance_km(a, b)
 
     return dist
@@ -380,6 +341,7 @@ def format_time(minutes):
     mins %= 60
     seconds = round((minutes - mins) * 60)
 
+    # Format as HH:MM:SS
     return f"{str(hours).zfill(2)}:{str(mins).zfill(2)}:{str(seconds).zfill(2)}"
 
 
@@ -391,21 +353,27 @@ unique_connections = data.drop_duplicates("id")
 scats_numbers = unique_connections["SCATS Number"].unique()
 
 for id in scats_numbers:
+    # Find a row for each connection at this site
     connections = unique_connections[unique_connections["SCATS Number"] == id]
+
+    # Find the mean position of all connections at this site
     mean_latitude = connections["NB_LATITUDE"].mean()
     mean_longitude = connections["NB_LONGITUDE"].mean()
 
+    # Average the volume data for all connections at this site
     times = connections.iloc[:, 11:].to_numpy()
     avg_times = [np.mean(k) for k in zip(*times)]
 
+    # Save the intersection to the dictionary
     intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
 
 # train_model()
 # test_model(4034)
+
 routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]))
 routes = sort_routes(routes)
 
-# Show sites on map
+# Show map
 intersection_values = list(intersections.values())
 fig = go.Figure(go.Scattermapbox(
     name="Intersections",
@@ -414,15 +382,18 @@ fig = go.Figure(go.Scattermapbox(
     lat=[x[1] for x in intersection_values],
     marker={"size": 10}))
 
+# Enumerate over routes
 for i, route in enumerate(routes):
     distance = total_distance_km(route)
     travel_time = total_travel_time_mins(route)
 
+    # Print out route information
     print(f"===== Route {i + 1} =====")
     print(f"Route: {' → '.join(map(str, route))}")
     print(f"Distance: {round(distance, 2)}km")
     print(f"Duration: {format_time(travel_time)}")
 
+    # Add route to map
     fig.add_trace(go.Scattermapbox(
         name=f"Route {i + 1} {format_time(travel_time)}",
         mode="markers+lines",
