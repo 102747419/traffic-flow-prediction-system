@@ -337,6 +337,11 @@ def a_star_multiple(start_id, dest_id, routes=5, tries=500):
     return solutions
 
 
+def sort_routes(routes):
+    time = map(total_travel_time_mins, routes)
+    return [x for _, x in sorted(zip(time, routes))]
+
+
 def distance_km(a_id, b_id):
     a = intersections[a_id]
     b = intersections[b_id]
@@ -388,6 +393,7 @@ for id in scats_numbers:
 # train_model()
 test_model(4034)
 routes = a_star_multiple(4040, 4030)
+routes = sort_routes(routes)
 
 # Show sites on map
 intersection_values = list(intersections.values())
