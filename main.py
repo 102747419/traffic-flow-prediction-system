@@ -394,7 +394,11 @@ for id in scats_numbers:
     connections = unique_connections[unique_connections["SCATS Number"] == id]
     mean_latitude = connections["NB_LATITUDE"].mean()
     mean_longitude = connections["NB_LONGITUDE"].mean()
-    intersections[id] = (id, mean_latitude, mean_longitude)
+
+    times = connections.iloc[:, 11:].to_numpy()
+    avg_times = [np.mean(k) for k in zip(*times)]
+
+    intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
 
 # train_model()
 # test_model(4034)
