@@ -403,7 +403,7 @@ for id in scats_numbers:
     intersections[id] = (id, mean_latitude, mean_longitude)
 
 # train_model()
-test_model(4034)
+# test_model(4034)
 routes = a_star_multiple(4040, 4030)
 routes = sort_routes(routes)
 
