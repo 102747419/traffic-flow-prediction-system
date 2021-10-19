@@ -102,10 +102,6 @@ def process_data(data, lags):
     arr_y_test = []
 
     for index, row in data.iterrows():
-        # TEMPORARY SO ITS FASTER TO TEST
-        if index > 100:
-            break
-
         # read data
         id = row["SCATS Number"]
         site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
