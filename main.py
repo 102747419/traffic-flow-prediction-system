@@ -377,6 +377,18 @@ def total_travel_time_mins(route):
     return total_distance_km(route) + (len(route) - 1) * 0.5
 
 
+def format_time(minutes):
+    mins = math.floor(minutes)
+    seconds = round((minutes - mins) * 60)
+
+    text = f"{mins}m"
+
+    if seconds > 0:
+        text += f" {seconds}s"
+
+    return text
+
+
 lag = 8
 config = {"batch": 50, "epochs": 20}
 data, sites = load_data()
@@ -414,7 +426,7 @@ for i, route in enumerate(routes):
     print("Duration (mins):", travel_time)
 
     fig.add_trace(go.Scattermapbox(
-        name="Route " + str(i + 1),
+        name=f"Route {i + 1} {format_time(travel_time)}",
         mode="markers+lines",
         lon=[intersections[x][2] for x in route],
         lat=[intersections[x][1] for x in route],
