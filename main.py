@@ -1,4 +1,5 @@
 import math
+import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -404,7 +405,7 @@ for id in scats_numbers:
 
 # train_model()
 # test_model(4034)
-routes = a_star_multiple(4040, 4030)
+routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]))
 routes = sort_routes(routes)
 
 # Show sites on map
