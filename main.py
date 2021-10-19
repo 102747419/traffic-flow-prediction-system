@@ -376,14 +376,11 @@ def total_travel_time_mins(route):
 
 def format_time(minutes):
     mins = math.floor(minutes)
+    hours = math.floor(mins / 60)
+    mins %= 60
     seconds = round((minutes - mins) * 60)
 
-    text = f"{mins}m"
-
-    if seconds > 0:
-        text += f" {seconds}s"
-
-    return text
+    return f"{str(hours).zfill(2)}:{str(mins).zfill(2)}:{str(seconds).zfill(2)}"
 
 
 lag = 8
@@ -417,10 +414,10 @@ for i, route in enumerate(routes):
     distance = total_distance_km(route)
     travel_time = total_travel_time_mins(route)
 
-    print("===== Route " + str(i + 1) + " =====")
-    print("Route:", route)
-    print("Distance (km):  ", distance)
-    print("Duration (mins):", travel_time)
+    print(f"===== Route {i + 1} =====")
+    print(f"Route: {' → '.join(map(str, route))}")
+    print(f"Distance: {round(distance, 2)}km")
+    print(f"Duration: {format_time(travel_time)}")
 
     fig.add_trace(go.Scattermapbox(
         name=f"Route {i + 1} {format_time(travel_time)}",
