@@ -92,6 +92,8 @@ def process_data(data, lags):
     flattened_data = data.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
 
+    train, test, validation = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
     train, test, validation = split_data(data)
 
     arr_x_train, arr_y_train = [], []
@@ -159,6 +161,9 @@ def split_data(data):
     test = pd.DataFrame()
     validation = pd.DataFrame()
 
+    for i in range(5):
+        print(i)
+
     for i, row in data.iterrows():
         id = row.iloc[0]
         if id != prev_id:
@@ -172,6 +177,7 @@ def split_data(data):
         else:
             train = train.append(row, ignore_index=True)
 
+    print("test")
     return train, test, validation
 
 
