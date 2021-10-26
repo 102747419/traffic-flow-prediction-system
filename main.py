@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from keras.engine.training import Model
 from keras.layers import Dense, Dropout
+from keras.layers.core import Activation
 from keras.layers.recurrent import GRU
 from keras.models import Sequential
 from keras.saving import save
@@ -150,12 +152,19 @@ def process_data(data, lags):
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
 
-def train_model():
+def train():
     X_train, y_train, _, _, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-    model, name = get_model()
 
+    model, train_func, name = get_model()
+
+    print(f"Training {name}...")
+    train_func(model, X_train, y_train, name, config)
+    print("Training complete!")
+
+
+def train_model(model, X_train, y_train, name, config):
     model.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
     hist = model.fit(
         X_train, y_train,
@@ -168,18 +177,76 @@ def train_model():
     df.to_csv("model/" + name + " loss.csv", encoding="utf-8", index=False)
 
 
+def train_saes(models, X_train, y_train, name, config):
+    temp = X_train
+
+    for i in range(len(models) - 1):
+        if i > 0:
+            p = models[i - 1]
+            hidden_layer_model = Model(p.input,
+                                       p.get_layer("hidden").output)
+            temp = hidden_layer_model.predict(temp)
+
+        m = models[i]
+        m.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
+
+        m.fit(temp, y_train, batch_size=config["batch"],
+              epochs=config["epochs"],
+              validation_split=0.05)
+
+        models[i] = m
+
+    saes = models[-1]
+    for i in range(len(models) - 1):
+        weights = models[i].get_layer("hidden").get_weights()
+        saes.get_layer(f"hidden{i + 1}").set_weights(weights)
+
+    train_model(saes, X_train, y_train, name, config)
+
+
 def get_model():
     return get_gru([lag, 64, 64, 1])
+    return get_saes([lag, 400, 400, 400, 1])
 
 
-def get_gru(units):
+def get_gru(layers):
     model = Sequential()
-    model.add(GRU(units[1], input_shape=(units[0], 1), return_sequences=True))
-    model.add(GRU(units[2]))
+    model.add(GRU(layers[1], input_shape=(layers[0], 1), return_sequences=True))
+    model.add(GRU(layers[2]))
     model.add(Dropout(0.2))
-    model.add(Dense(units[3], activation="sigmoid"))
+    model.add(Dense(layers[3], activation="sigmoid"))
 
-    return model, "gru"
+    return model, train_model, "gru"
+
+
+def get_sae(inputs, hidden, output):
+    model = Sequential()
+    model.add(Dense(hidden, input_dim=inputs, name="hidden"))
+    model.add(Activation("sigmoid"))
+    model.add(Dropout(0.2))
+    model.add(Dense(output, activation="sigmoid"))
+
+    return model, train_model, "sae"
+
+
+def get_saes(layers):
+    sae1 = get_sae(layers[0], layers[1], layers[-1])
+    sae2 = get_sae(layers[1], layers[2], layers[-1])
+    sae3 = get_sae(layers[2], layers[3], layers[-1])
+
+    saes = Sequential()
+    saes.add(Dense(layers[1], input_dim=layers[0], name="hidden1"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dense(layers[2], name="hidden2"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dense(layers[3], name="hidden3"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dropout(0.2))
+    saes.add(Dense(layers[4], activation="sigmoid"))
+
+    models = [sae1, sae2, sae3, saes]
+
+    return models, train_saes, "saes"
 
 
 def test_model(id):
@@ -415,7 +482,7 @@ for id in scats_numbers:
     # Save the intersection to the dictionary
     intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
 
-# train_model()
+# train()
 # test_model(4034)
 
 start_time_minutes = military_to_minutes(sys.argv[3])
