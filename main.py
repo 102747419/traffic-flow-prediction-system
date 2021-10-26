@@ -300,9 +300,8 @@ def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
     return solutions
 
 
-def sort_routes(routes):
-    time = map(total_travel_time_mins, routes)
-    return [x for _, x in sorted(zip(time, routes))]
+def sort_routes(routes, start_time_minutes):
+    return sorted(routes, key=lambda x: total_travel_time_mins(x, start_time_minutes))
 
 
 def distance_km(a_id, b_id):
@@ -328,11 +327,16 @@ def total_distance_km(route):
 
 
 def travel_time_mins(a_id, b_id, time_minutes):
-    return distance_km(a_id, b_id) + intersections[b_id][3][minutes_to_index(time_minutes)] / 10
+    return distance_km(a_id, b_id) + intersections[b_id][3][minutes_to_index(time_minutes)] / 120
 
 
-def total_travel_time_mins(route):
-    return total_distance_km(route) + (len(route) - 1) * 0.5
+def total_travel_time_mins(route, start_time_minutes):
+    time = start_time_minutes
+
+    for i in range(len(route) - 1):
+        time += travel_time_mins(route[i], route[i + 1], time)
+
+    return time - start_time_minutes
 
 
 def military_to_minutes(military):
@@ -379,8 +383,10 @@ for id in scats_numbers:
 
 # train_model()
 # test_model(4034)
-routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), military_to_minutes(sys.argv[3]))
-routes = sort_routes(routes)
+
+start_time_minutes = military_to_minutes(sys.argv[3])
+routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), start_time_minutes)
+routes = sort_routes(routes, start_time_minutes)
 
 # Show map
 intersection_values = list(intersections.values())
@@ -395,7 +401,7 @@ fig = go.Figure(go.Scattermapbox(
 # Enumerate over routes
 for i, route in enumerate(routes):
     distance = total_distance_km(route)
-    travel_time = total_travel_time_mins(route)
+    travel_time = total_travel_time_mins(route, start_time_minutes)
 
     # Print out route information
     print(f"===== Route {i + 1} =====")
