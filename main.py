@@ -16,6 +16,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 import astar
 
+lag = 8
+config = {"batch": 50, "epochs": 20}
+
 graph = {
     970: [2846, 3685],
     2000: [4043, 3685, 3682],
@@ -59,8 +62,6 @@ graph = {
     4821: [3001]
 }
 
-intersections = {}
-
 
 def load_data():
     # Read data from csv files
@@ -91,7 +92,31 @@ def load_data():
 
     data.insert(0, "id", col)
 
-    return data, sites
+    return data
+
+
+def generate_intersections(data):
+    unique_connections = data.drop_duplicates("id")
+    scats_numbers = unique_connections["SCATS Number"].unique()
+
+    intersections = {}
+
+    for id in scats_numbers:
+        # Find a row for each connection at this site
+        connections = unique_connections[unique_connections["SCATS Number"] == id]
+
+        # Find the mean position of all connections at this site
+        mean_latitude = connections["NB_LATITUDE"].mean()
+        mean_longitude = connections["NB_LONGITUDE"].mean()
+
+        # Average the volume data for all connections at this site
+        times = connections.iloc[:, 11:].to_numpy()
+        avg_times = [np.mean(k) for k in zip(*times)]
+
+        # Save the intersection to the dictionary
+        intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
+
+    return intersections
 
 
 def process_data(data, lags):
@@ -152,7 +177,7 @@ def process_data(data, lags):
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
 
-def train(model_name):
+def train(data, model_name):
     X_train, y_train, _, _, _ = process_data(data, lag)
 
     model, train_func, name = get_model(model_name)
@@ -232,7 +257,7 @@ def get_lstm(units):
     model.add(LSTM(units[1], input_shape=(units[0], 1), return_sequences=True))
     model.add(LSTM(units[2]))
     model.add(Dropout(0.2))
-    model.add(Dense(units[3], activation='sigmoid'))
+    model.add(Dense(units[3], activation="sigmoid"))
 
     return model, train_model, "lstm"
 
@@ -316,6 +341,7 @@ def plot_results(y_true, y_pred, name):
 
 
 # https://stackoverflow.com/a/8922151/10456572
+# Replaced with A*
 def dfs(start_id, dest_id):
     # Maintain a queue of paths
     queue = []
@@ -386,11 +412,10 @@ def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
         if len(solutions) == routes:
             break
 
+    # Sort solutions so they are in the correct order
+    solutions = sorted(solutions, key=lambda x: total_travel_time_mins(x, start_time_minutes))
+
     return solutions
-
-
-def sort_routes(routes, start_time_minutes):
-    return sorted(routes, key=lambda x: total_travel_time_mins(x, start_time_minutes))
 
 
 def distance_km(a_id, b_id):
@@ -501,68 +526,67 @@ def format_duration(minutes):
     return f"{str(hours).zfill(2)}:{str(mins).zfill(2)}:{str(seconds).zfill(2)}"
 
 
-lag = 8
-config = {"batch": 50, "epochs": 20}
-data, sites = load_data()
+def print_routes(routes):
+    for i, route in enumerate(routes):
+        distance = total_distance_km(route)
+        travel_time = total_travel_time_mins(route, start_time_minutes)
 
-unique_connections = data.drop_duplicates("id")
-scats_numbers = unique_connections["SCATS Number"].unique()
-
-for id in scats_numbers:
-    # Find a row for each connection at this site
-    connections = unique_connections[unique_connections["SCATS Number"] == id]
-
-    # Find the mean position of all connections at this site
-    mean_latitude = connections["NB_LATITUDE"].mean()
-    mean_longitude = connections["NB_LONGITUDE"].mean()
-
-    # Average the volume data for all connections at this site
-    times = connections.iloc[:, 11:].to_numpy()
-    avg_times = [np.mean(k) for k in zip(*times)]
-
-    # Save the intersection to the dictionary
-    intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
-
-model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
-
-# train(model_name)
-# test_model()
-
-start_time_minutes = military_to_minutes(sys.argv[3])
-routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), start_time_minutes)
-routes = sort_routes(routes, start_time_minutes)
-
-# Show map
-intersection_values = list(intersections.values())
-fig = go.Figure(go.Scattermapbox(
-    name="Intersections",
-    mode="markers",
-    hovertext=[f"SCATS Number: {x[0]}" for x in intersection_values],
-    lon=[x[2] for x in intersection_values],
-    lat=[x[1] for x in intersection_values],
-    marker={"size": 10}))
-
-# Enumerate over routes
-for i, route in enumerate(routes):
-    distance = total_distance_km(route)
-    travel_time = total_travel_time_mins(route, start_time_minutes)
-
-    # Print out route information
-    print(f"===== Route {i + 1} =====")
-    print(f"Route: {' → '.join(map(str, route))}")
-    print(f"Distance: {round(distance, 2)}km")
-    print(f"Duration: {format_duration(travel_time)}")
-
-    # Add route to map
-    fig.add_trace(go.Scattermapbox(
-        name=f"Route {i + 1} {format_duration(travel_time)}",
-        mode="markers+lines",
-        hovertext=[intersections[x][0] for x in route],
-        lon=[intersections[x][2] for x in route],
-        lat=[intersections[x][1] for x in route],
-        marker={"size": 10}, line={"width": 4}))
+        print(f"===== Route {i + 1} =====")
+        print(f"Route: {' → '.join(map(str, route))}")
+        print(f"Distance: {round(distance, 2)}km")
+        print(f"Duration: {format_duration(travel_time)}")
 
 
-fig.update_layout(mapbox_style="open-street-map")
-fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-fig.show()
+def show_routes_on_map(routes):
+    # Show intersections on map
+    intersection_values = list(intersections.values())
+    fig = go.Figure(go.Scattermapbox(
+        name="Intersections",
+        mode="markers",
+        hovertext=[f"SCATS Number: {x[0]}" for x in intersection_values],
+        lon=[x[2] for x in intersection_values],
+        lat=[x[1] for x in intersection_values],
+        marker={"size": 10}))
+
+    # Enumerate over routes
+    for i, route in enumerate(routes):
+        travel_time = total_travel_time_mins(route, start_time_minutes)
+
+        # Add route to map
+        fig.add_trace(go.Scattermapbox(
+            name=f"Route {i + 1} {format_duration(travel_time)}",
+            mode="markers+lines",
+            hovertext=[intersections[x][0] for x in route],
+            lon=[intersections[x][2] for x in route],
+            lat=[intersections[x][1] for x in route],
+            marker={"size": 10}, line={"width": 4}))
+
+    # Configure map
+    fig.update_layout(mapbox_style="open-street-map")
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+
+    # Open map in browser
+    fig.show()
+
+
+if __name__ == "__main__":
+    # Get input arguments
+    start_id = int(sys.argv[1])
+    dest_id = int(sys.argv[2])
+    start_time_minutes = military_to_minutes(sys.argv[3])
+    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+
+    # Load the data
+    data = load_data()
+    intersections = generate_intersections(data)
+
+    # Get best routes
+    routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), start_time_minutes)
+
+    # Print routes to console
+    print_routes(routes)
+
+    input("\nPress Enter to continue...")
+
+    # Show on map
+    show_routes_on_map(routes)
