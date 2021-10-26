@@ -415,6 +415,29 @@ def total_distance_km(route):
     return dist
 
 
+def predict_traffic_volume(site_id, time_index):
+    # # Load the model
+    # model = save.load_model(f"model/{model_name}.h5")
+
+    # # Process the data
+    # _, _, X_test, y_test, scaler = process_data(data, lag)
+
+    # # Unscale the test labels
+    # y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # # Reshape the test data so it works with the model
+    # X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+
+    # # Predict using the model
+    # predicted = model.predict(X_test)
+
+    # # Unscale predicted data
+    # predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # return predicted[time_index]
+    return intersections[site_id][3][time_index]
+
+
 def get_interpolated_traffic_volume(site_id, time_minutes):
     # Calculate the time indices
     index1 = math.floor(time_minutes / 15)
@@ -424,8 +447,8 @@ def get_interpolated_traffic_volume(site_id, time_minutes):
     t = (time_minutes % 15) / 15
 
     # Get the traffic volume at each time
-    volume1 = intersections[site_id][3][index1]
-    volume2 = intersections[site_id][3][index2]
+    volume1 = predict_traffic_volume(site_id, index1)
+    volume2 = predict_traffic_volume(site_id, index2)
 
     # Interpolate between the two traffic volumes
     return (1 - t) * volume1 + t * volume2
@@ -500,7 +523,7 @@ for id in scats_numbers:
     # Save the intersection to the dictionary
     intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
 
-model_name = sys.argv[4].lower() if len(sys.argv) > 4 else None
+model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
 # train(model_name)
 # test_model()
