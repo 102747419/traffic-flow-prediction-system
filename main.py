@@ -335,6 +335,16 @@ def total_travel_time_mins(route):
     return total_distance_km(route) + (len(route) - 1) * 0.5
 
 
+def military_to_index(military):
+    hour = int(military[:2])
+    minutes = int(military[2:])
+
+    hour_index = hour * 4
+    minutes_index = round(minutes / 15)
+
+    return hour_index + minutes_index
+
+
 def format_time(minutes):
     mins = math.floor(minutes)
     hours = math.floor(mins / 60)
@@ -369,8 +379,7 @@ for id in scats_numbers:
 
 # train_model()
 # test_model(4034)
-
-routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]))
+routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), military_to_index(sys.argv[3]))
 routes = sort_routes(routes)
 
 # Show map
