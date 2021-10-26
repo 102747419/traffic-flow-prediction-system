@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from keras.engine.training import Model
 from keras.layers import Dense, Dropout
 from keras.layers.core import Activation
-from keras.layers.recurrent import GRU
+from keras.layers.recurrent import GRU, LSTM
 from keras.models import Sequential
 from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
@@ -155,12 +155,15 @@ def process_data(data, lags):
 def train(model_name):
     X_train, y_train, _, _, _ = process_data(data, lag)
 
-    X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-
     model, train_func, name = get_model(model_name)
 
+    if name == "saes":
+        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]))
+    else:
+        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
+
     print(f"Training {name}...")
-    # train_func(model, X_train, y_train, name, config)
+    train_func(model, X_train, y_train, name, config)
     print("Training complete!")
 
 
@@ -207,6 +210,8 @@ def train_saes(models, X_train, y_train, name, config):
 def get_model(name):
     if name == "saes":
         return get_saes([lag, 400, 400, 400, 1])
+    if name == "lstm":
+        return get_lstm([lag, 64, 64, 1])
 
     # Return gru by default
     return get_gru([lag, 64, 64, 1])
@@ -220,6 +225,16 @@ def get_gru(layers):
     model.add(Dense(layers[3], activation="sigmoid"))
 
     return model, train_model, "gru"
+
+
+def get_lstm(units):
+    model = Sequential()
+    model.add(LSTM(units[1], input_shape=(units[0], 1), return_sequences=True))
+    model.add(LSTM(units[2]))
+    model.add(Dropout(0.2))
+    model.add(Dense(units[3], activation='sigmoid'))
+
+    return model, train_model, "lstm"
 
 
 def get_sae(inputs, hidden, output):
