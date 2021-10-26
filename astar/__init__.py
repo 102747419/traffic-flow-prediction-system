@@ -75,7 +75,7 @@ class AStar:
         else:
             return reversed(list(_gen()))
 
-    def astar(self, start, goal, reversePath=False):
+    def astar(self, start, goal, start_time_minutes, reversePath=False):
         if self.is_goal_reached(start, goal):
             return [start]
         searchNodes = AStar.SearchNodeDict()
@@ -93,7 +93,7 @@ class AStar:
                 if neighbor.closed:
                     continue
                 tentative_gscore = current.gscore + \
-                    self.distance_between(current.data, neighbor.data)
+                    self.distance_between(current.data, neighbor.data, start_time_minutes + current.gscore)
                 if tentative_gscore >= neighbor.gscore:
                     continue
                 neighbor.came_from = current
@@ -110,22 +110,22 @@ class AStar:
         return None
 
 
-def find_path(start, goal, neighbors_fnct, reversePath=False, heuristic_cost_estimate_fnct=lambda a, b: Infinite, distance_between_fnct=lambda a, b: 1.0, is_goal_reached_fnct=lambda a, b: a == b):
+def find_path(start, goal, start_time_minutes, neighbors_fnct, reversePath=False, heuristic_cost_estimate_fnct=lambda a, b: Infinite, distance_between_fnct=lambda a, b: 1.0, is_goal_reached_fnct=lambda a, b: a == b):
     """A non-class version of the path finding algorithm"""
     class FindPath(AStar):
 
         def heuristic_cost_estimate(self, current, goal):
             return heuristic_cost_estimate_fnct(current, goal)
 
-        def distance_between(self, n1, n2):
-            return distance_between_fnct(n1, n2)
+        def distance_between(self, n1, n2, time_minutes):
+            return distance_between_fnct(n1, n2, time_minutes)
 
         def neighbors(self, node):
             return neighbors_fnct(node)
 
         def is_goal_reached(self, current, goal):
             return is_goal_reached_fnct(current, goal)
-    return FindPath().astar(start, goal, reversePath)
+    return FindPath().astar(start, goal, start_time_minutes, reversePath)
 
 
 __all__ = ['AStar', 'find_path']

@@ -179,25 +179,25 @@ def get_gru(units):
 
 
 def test_model(id):
-    # load the model
+    # Load the model
     model = save.load_model("model/gru.h5")
 
-    # process the data
+    # Process the data
     _, _, X_test, y_test, scaler = process_data(data, lag)
 
-    # unscale the test labels
+    # Unscale the test labels
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
 
-    # reshape the test data so it works with the model
+    # Reshape the test data so it works with the model
     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
-    # predict using the model
+    # Predict using the model
     predicted = model.predict(X_test)
 
-    # unscale predicted data
+    # Unscale predicted data
     predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
-    # plot results!
+    # Plot results!
     plot_results(y_test, predicted, "gru")
 
 
@@ -254,33 +254,33 @@ def dfs(start_id, dest_id):
     return None
 
 
-def a_star(start_id, dest_id, visited):
+def a_star(start_id, dest_id, start_time_minutes, visited):
     def neighbors(n):
         for n1 in graph[n]:
             yield n1
 
-    def distance(n1, n2):
+    def distance(n1, n2, time_minutes):
         added_cost = 0
         if n2 in visited:
             added_cost = math.log2(visited[n2] / 60 + 1)
 
-        return travel_time_mins(n1, n2) + added_cost
+        return travel_time_mins(n1, n2, time_minutes) + added_cost
 
     path = list(astar.find_path(
-        start_id, dest_id,
+        start_id, dest_id, start_time_minutes,
         neighbors_fnct=neighbors,
-        heuristic_cost_estimate_fnct=travel_time_mins,
+        heuristic_cost_estimate_fnct=distance_km,
         distance_between_fnct=distance))
 
     return path
 
 
-def a_star_multiple(start_id, dest_id, routes=5, tries=500):
+def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
     solutions = []
     visited = {}
 
     for i in range(tries):
-        route = a_star(start_id, dest_id, visited)
+        route = a_star(start_id, dest_id, start_time_minutes, visited)
 
         # Only add solution if it is unique
         if route not in solutions:
@@ -327,25 +327,25 @@ def total_distance_km(route):
     return dist
 
 
-def travel_time_mins(a_id, b_id):
-    return distance_km(a_id, b_id) + 0.5
+def travel_time_mins(a_id, b_id, time_minutes):
+    return distance_km(a_id, b_id) + intersections[b_id][3][minutes_to_index(time_minutes)] / 10
 
 
 def total_travel_time_mins(route):
     return total_distance_km(route) + (len(route) - 1) * 0.5
 
 
-def military_to_index(military):
+def military_to_minutes(military):
     hour = int(military[:2])
     minutes = int(military[2:])
-
-    hour_index = hour * 4
-    minutes_index = round(minutes / 15)
-
-    return hour_index + minutes_index
+    return hour * 60 + minutes
 
 
-def format_time(minutes):
+def minutes_to_index(minutes):
+    return round(minutes / 15)
+
+
+def format_duration(minutes):
     mins = math.floor(minutes)
     hours = math.floor(mins / 60)
     mins %= 60
@@ -379,7 +379,7 @@ for id in scats_numbers:
 
 # train_model()
 # test_model(4034)
-routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), military_to_index(sys.argv[3]))
+routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), military_to_minutes(sys.argv[3]))
 routes = sort_routes(routes)
 
 # Show map
@@ -401,11 +401,11 @@ for i, route in enumerate(routes):
     print(f"===== Route {i + 1} =====")
     print(f"Route: {' → '.join(map(str, route))}")
     print(f"Distance: {round(distance, 2)}km")
-    print(f"Duration: {format_time(travel_time)}")
+    print(f"Duration: {format_duration(travel_time)}")
 
     # Add route to map
     fig.add_trace(go.Scattermapbox(
-        name=f"Route {i + 1} {format_time(travel_time)}",
+        name=f"Route {i + 1} {format_duration(travel_time)}",
         mode="markers+lines",
         hovertext=[intersections[x][0] for x in route],
         lon=[intersections[x][2] for x in route],
