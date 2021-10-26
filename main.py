@@ -378,6 +378,7 @@ intersection_values = list(intersections.values())
 fig = go.Figure(go.Scattermapbox(
     name="Intersections",
     mode="markers",
+    hovertext=[f"SCATS Number: {x[0]}" for x in intersection_values],
     lon=[x[2] for x in intersection_values],
     lat=[x[1] for x in intersection_values],
     marker={"size": 10}))
@@ -397,6 +398,7 @@ for i, route in enumerate(routes):
     fig.add_trace(go.Scattermapbox(
         name=f"Route {i + 1} {format_time(travel_time)}",
         mode="markers+lines",
+        hovertext=[intersections[x][0] for x in route],
         lon=[intersections[x][2] for x in route],
         lat=[intersections[x][1] for x in route],
         marker={"size": 10}, line={"width": 4}))
