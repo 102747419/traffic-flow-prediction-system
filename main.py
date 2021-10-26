@@ -152,15 +152,15 @@ def process_data(data, lags):
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
 
-def train():
+def train(model_name):
     X_train, y_train, _, _, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
-    model, train_func, name = get_model()
+    model, train_func, name = get_model(model_name)
 
     print(f"Training {name}...")
-    train_func(model, X_train, y_train, name, config)
+    # train_func(model, X_train, y_train, name, config)
     print("Training complete!")
 
 
@@ -204,9 +204,12 @@ def train_saes(models, X_train, y_train, name, config):
     train_model(saes, X_train, y_train, name, config)
 
 
-def get_model():
+def get_model(name):
+    if name == "saes":
+        return get_saes([lag, 400, 400, 400, 1])
+
+    # Return gru by default
     return get_gru([lag, 64, 64, 1])
-    return get_saes([lag, 400, 400, 400, 1])
 
 
 def get_gru(layers):
@@ -249,9 +252,9 @@ def get_saes(layers):
     return models, train_saes, "saes"
 
 
-def test_model(id):
+def test_model(model_name):
     # Load the model
-    model = save.load_model("model/gru.h5")
+    model = save.load_model(f"model/{model_name}.h5")
 
     # Process the data
     _, _, X_test, y_test, scaler = process_data(data, lag)
@@ -482,8 +485,10 @@ for id in scats_numbers:
     # Save the intersection to the dictionary
     intersections[id] = (id, mean_latitude, mean_longitude, avg_times)
 
-# train()
-# test_model(4034)
+model_name = sys.argv[4].lower() if len(sys.argv) > 4 else None
+
+# train(model_name)
+# test_model()
 
 start_time_minutes = military_to_minutes(sys.argv[3])
 routes = a_star_multiple(int(sys.argv[1]), int(sys.argv[2]), start_time_minutes)
