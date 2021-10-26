@@ -154,7 +154,7 @@ def train_model():
     X_train, y_train, _, _, _ = process_data(data, lag)
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-    model, name = get_gru([lag, 64, 64, 1])
+    model, name = get_model()
 
     model.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
     hist = model.fit(
@@ -166,6 +166,10 @@ def train_model():
     model.save("model/" + name + ".h5")
     df = pd.DataFrame.from_dict(hist.history)
     df.to_csv("model/" + name + " loss.csv", encoding="utf-8", index=False)
+
+
+def get_model():
+    return get_gru([lag, 64, 64, 1])
 
 
 def get_gru(units):
@@ -326,8 +330,42 @@ def total_distance_km(route):
     return dist
 
 
+def get_interpolated_traffic_volume(site_id, time_minutes):
+    # Calculate the time indices
+    index1 = math.floor(time_minutes / 15)
+    index2 = math.ceil(time_minutes / 15)
+
+    # Calculate how much to interpolate
+    t = (time_minutes % 15) / 15
+
+    # Get the traffic volume at each time
+    volume1 = intersections[site_id][3][index1]
+    volume2 = intersections[site_id][3][index2]
+
+    # Interpolate between the two traffic volumes
+    return (1 - t) * volume1 + t * volume2
+
+
+def get_traffic_volume(a_id, b_id, time_minutes):
+    # Calculate the duration of the journey between these two connected sites
+    # Assuming we are going 60km/h, `time_h = distance_km / speed_kmh` simplifies to `time_m = distance_km`
+    duration = distance_km(a_id, b_id)
+
+    # Calculate the time at each site
+    a_time = time_minutes
+    b_time = a_time + duration
+
+    # Calculate the interpolated traffic volume for each site
+    a_volume = get_interpolated_traffic_volume(a_id, a_time)
+    b_volume = get_interpolated_traffic_volume(b_id, b_time)
+
+    # Average the two sites' traffic volumes
+    return (a_volume + b_volume) / 2
+
+
 def travel_time_mins(a_id, b_id, time_minutes):
-    return distance_km(a_id, b_id) + intersections[b_id][3][minutes_to_index(time_minutes)] / 120
+    # Every 120 cars adds 1 minute to the travel time
+    return distance_km(a_id, b_id) + get_traffic_volume(a_id, b_id, time_minutes) / 120
 
 
 def total_travel_time_mins(route, start_time_minutes):
@@ -343,10 +381,6 @@ def military_to_minutes(military):
     hour = int(military[:2])
     minutes = int(military[2:])
     return hour * 60 + minutes
-
-
-def minutes_to_index(minutes):
-    return round(minutes / 15)
 
 
 def format_duration(minutes):
