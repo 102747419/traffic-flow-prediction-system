@@ -154,7 +154,6 @@ def process_datapool(data, lags, scaler, shuffle):
 
 
 def split_data(data):
-    count = 0
     prev_id = data.iloc[0].iloc[0]
 
     train = pd.DataFrame()
@@ -170,9 +169,9 @@ def split_data(data):
             prev_id = id
             count = 0
 
-        if count < 7:
+        if i < 7:
             test = test.append(row, ignore_index=True)
-        elif count < 9:
+        elif i < 9:
             validation = validation.append(row, ignore_index=True)
         else:
             train = train.append(row, ignore_index=True)
