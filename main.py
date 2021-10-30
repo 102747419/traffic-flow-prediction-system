@@ -1,5 +1,6 @@
 import math
 import sys
+import tkinter as tk
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -13,10 +14,13 @@ from keras.layers.recurrent import GRU, LSTM
 from keras.models import Sequential
 from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
+import os
 
 import astar
 
 lag = 8
+train_file = "data/train-data.csv"
+test_file = "data/test-data.csv"
 config = {"batch": 50, "epochs": 20}
 
 graph = {
@@ -63,7 +67,23 @@ graph = {
 }
 
 
+def debug_code():
+    test_df = pd.DataFrame(columns=["a", "b", "c"])
+    for i in range(10):
+        row = {"a": i, "b": i+100, "c": i+1000}
+        test_df = test_df.append(row, ignore_index=True)
+        row = {"a": i, "b": i + 200, "c": i + 2000}
+        test_df = test_df.append(row, ignore_index=True)
+
+    # Get
+    temp = test_df.loc[test_df["a"] == 3].iloc[0]
+    # NB_LATITUDE,NB_LONGITUDE
+    delta_x = temp.loc["c"] - temp.loc["b"]
+
+
 def load_data():
+    # debug_code()
+
     # Read data from csv files
     sites = pd.read_csv("data/scats-sites.csv")
     data = pd.read_csv("data/scats-data.csv")
@@ -98,7 +118,24 @@ def load_data():
 
 
 def generate_intersections(data):
-    intersections = pd.DataFrame(columns=['SCATS Number', 'NB_LATITUDE', 'NB_LONGITUDE', 'Date',
+    test = pd.DataFrame(columns=['SCATS Number',
+                                 'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09',
+                                 'V10', 'V11', 'V12',
+                                 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22',
+                                 'V23', 'V24', 'V25',
+                                 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35',
+                                 'V36', 'V37', 'V38',
+                                 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48',
+                                 'V49', 'V50', 'V51',
+                                 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61',
+                                 'V62', 'V63', 'V64',
+                                 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74',
+                                 'V75', 'V76', 'V77',
+                                 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87',
+                                 'V88', 'V89', 'V90',
+                                 'V91', 'V92', 'V93', 'V94', 'V95'])
+
+    train = pd.DataFrame(columns=['SCATS Number', 'NB_LATITUDE', 'NB_LONGITUDE', 'Date',
                              'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09', 'V10', 'V11', 'V12',
                              'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25',
                              'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38',
@@ -134,45 +171,86 @@ def generate_intersections(data):
                     temp_list[d][v] /= arr_index
                 # Read into DataFrame
                 date = f"10/{(d+1)}/2016"
-                new_row = {'SCATS Number': prev_site, 'NB_LATITUDE': lat, 'NB_LONGITUDE': long, 'Date': date,
-                           'V00': temp_list[d][0], 'V01': temp_list[d][1], 'V02': temp_list[d][2],
-                           'V03': temp_list[d][3], 'V04': temp_list[d][4], 'V05': temp_list[d][5],
-                           'V06': temp_list[d][6], 'V07': temp_list[d][7], 'V08': temp_list[d][8],
-                           'V09': temp_list[d][9], 'V10': temp_list[d][10], 'V11': temp_list[d][11],
-                           'V12': temp_list[d][12],
-                           'V13': temp_list[d][13], 'V14': temp_list[d][14], 'V15': temp_list[d][15],
-                           'V16': temp_list[d][16], 'V17': temp_list[d][17], 'V18': temp_list[d][18],
-                           'V19': temp_list[d][19], 'V20': temp_list[d][20], 'V21': temp_list[d][21],
-                           'V22': temp_list[d][22], 'V23': temp_list[d][23], 'V24': temp_list[d][24],
-                           'V25': temp_list[d][25],
-                           'V26': temp_list[d][26], 'V27': temp_list[d][27], 'V28': temp_list[d][28],
-                           'V29': temp_list[d][29], 'V30': temp_list[d][30], 'V31': temp_list[d][31],
-                           'V32': temp_list[d][32], 'V33': temp_list[d][33], 'V34': temp_list[d][34],
-                           'V35': temp_list[d][35], 'V36': temp_list[d][36], 'V37': temp_list[d][37],
-                           'V38': temp_list[d][38],
-                           'V39': temp_list[d][39], 'V40': temp_list[d][40], 'V41': temp_list[d][41],
-                           'V42': temp_list[d][42], 'V43': temp_list[d][43], 'V44': temp_list[d][44],
-                           'V45': temp_list[d][45], 'V46': temp_list[d][46], 'V47': temp_list[d][47],
-                           'V48': temp_list[d][48], 'V49': temp_list[d][49], 'V50': temp_list[d][50],
-                           'V51': temp_list[d][51],
-                           'V52': temp_list[d][52], 'V53': temp_list[d][53], 'V54': temp_list[d][54],
-                           'V55': temp_list[d][55], 'V56': temp_list[d][56], 'V57': temp_list[d][57],
-                           'V58': temp_list[d][58], 'V59': temp_list[d][59], 'V60': temp_list[d][60],
-                           'V61': temp_list[d][61], 'V62': temp_list[d][62], 'V63': temp_list[d][63],
-                           'V64': temp_list[d][64],
-                           'V65': temp_list[d][65], 'V66': temp_list[d][66], 'V67': temp_list[d][67],
-                           'V68': temp_list[d][68], 'V69': temp_list[d][69], 'V70': temp_list[d][70],
-                           'V71': temp_list[d][71], 'V72': temp_list[d][72], 'V73': temp_list[d][73],
-                           'V74': temp_list[d][74], 'V75': temp_list[d][75], 'V76': temp_list[d][76],
-                           'V77': temp_list[d][77],
-                           'V78': temp_list[d][78], 'V79': temp_list[d][79], 'V80': temp_list[d][80],
-                           'V81': temp_list[d][81], 'V82': temp_list[d][82], 'V83': temp_list[d][83],
-                           'V84': temp_list[d][84], 'V85': temp_list[d][85], 'V86': temp_list[d][86],
-                           'V87': temp_list[d][87], 'V88': temp_list[d][88], 'V89': temp_list[d][89],
-                           'V90': temp_list[d][90],
-                           'V91': temp_list[d][91], 'V92': temp_list[d][92], 'V93': temp_list[d][93],
-                           'V94': temp_list[d][94], 'V95': temp_list[d][95]}
-                intersections = intersections.append(new_row, ignore_index=True)
+                if d+1 == 3:
+                    new_row = {'SCATS Number': prev_site,
+                               'V00': temp_list[d][0], 'V01': temp_list[d][1], 'V02': temp_list[d][2],
+                               'V03': temp_list[d][3], 'V04': temp_list[d][4], 'V05': temp_list[d][5],
+                               'V06': temp_list[d][6], 'V07': temp_list[d][7], 'V08': temp_list[d][8],
+                               'V09': temp_list[d][9], 'V10': temp_list[d][10], 'V11': temp_list[d][11],
+                               'V12': temp_list[d][12],
+                               'V13': temp_list[d][13], 'V14': temp_list[d][14], 'V15': temp_list[d][15],
+                               'V16': temp_list[d][16], 'V17': temp_list[d][17], 'V18': temp_list[d][18],
+                               'V19': temp_list[d][19], 'V20': temp_list[d][20], 'V21': temp_list[d][21],
+                               'V22': temp_list[d][22], 'V23': temp_list[d][23], 'V24': temp_list[d][24],
+                               'V25': temp_list[d][25],
+                               'V26': temp_list[d][26], 'V27': temp_list[d][27], 'V28': temp_list[d][28],
+                               'V29': temp_list[d][29], 'V30': temp_list[d][30], 'V31': temp_list[d][31],
+                               'V32': temp_list[d][32], 'V33': temp_list[d][33], 'V34': temp_list[d][34],
+                               'V35': temp_list[d][35], 'V36': temp_list[d][36], 'V37': temp_list[d][37],
+                               'V38': temp_list[d][38],
+                               'V39': temp_list[d][39], 'V40': temp_list[d][40], 'V41': temp_list[d][41],
+                               'V42': temp_list[d][42], 'V43': temp_list[d][43], 'V44': temp_list[d][44],
+                               'V45': temp_list[d][45], 'V46': temp_list[d][46], 'V47': temp_list[d][47],
+                               'V48': temp_list[d][48], 'V49': temp_list[d][49], 'V50': temp_list[d][50],
+                               'V51': temp_list[d][51],
+                               'V52': temp_list[d][52], 'V53': temp_list[d][53], 'V54': temp_list[d][54],
+                               'V55': temp_list[d][55], 'V56': temp_list[d][56], 'V57': temp_list[d][57],
+                               'V58': temp_list[d][58], 'V59': temp_list[d][59], 'V60': temp_list[d][60],
+                               'V61': temp_list[d][61], 'V62': temp_list[d][62], 'V63': temp_list[d][63],
+                               'V64': temp_list[d][64],
+                               'V65': temp_list[d][65], 'V66': temp_list[d][66], 'V67': temp_list[d][67],
+                               'V68': temp_list[d][68], 'V69': temp_list[d][69], 'V70': temp_list[d][70],
+                               'V71': temp_list[d][71], 'V72': temp_list[d][72], 'V73': temp_list[d][73],
+                               'V74': temp_list[d][74], 'V75': temp_list[d][75], 'V76': temp_list[d][76],
+                               'V77': temp_list[d][77],
+                               'V78': temp_list[d][78], 'V79': temp_list[d][79], 'V80': temp_list[d][80],
+                               'V81': temp_list[d][81], 'V82': temp_list[d][82], 'V83': temp_list[d][83],
+                               'V84': temp_list[d][84], 'V85': temp_list[d][85], 'V86': temp_list[d][86],
+                               'V87': temp_list[d][87], 'V88': temp_list[d][88], 'V89': temp_list[d][89],
+                               'V90': temp_list[d][90],
+                               'V91': temp_list[d][91], 'V92': temp_list[d][92], 'V93': temp_list[d][93],
+                               'V94': temp_list[d][94], 'V95': temp_list[d][95]}
+                    test = test.append(new_row, ignore_index=True)
+                else:
+                    new_row = {'SCATS Number': prev_site, 'NB_LATITUDE': lat, 'NB_LONGITUDE': long, 'Date': date,
+                               'V00': temp_list[d][0], 'V01': temp_list[d][1], 'V02': temp_list[d][2],
+                               'V03': temp_list[d][3], 'V04': temp_list[d][4], 'V05': temp_list[d][5],
+                               'V06': temp_list[d][6], 'V07': temp_list[d][7], 'V08': temp_list[d][8],
+                               'V09': temp_list[d][9], 'V10': temp_list[d][10], 'V11': temp_list[d][11],
+                               'V12': temp_list[d][12],
+                               'V13': temp_list[d][13], 'V14': temp_list[d][14], 'V15': temp_list[d][15],
+                               'V16': temp_list[d][16], 'V17': temp_list[d][17], 'V18': temp_list[d][18],
+                               'V19': temp_list[d][19], 'V20': temp_list[d][20], 'V21': temp_list[d][21],
+                               'V22': temp_list[d][22], 'V23': temp_list[d][23], 'V24': temp_list[d][24],
+                               'V25': temp_list[d][25],
+                               'V26': temp_list[d][26], 'V27': temp_list[d][27], 'V28': temp_list[d][28],
+                               'V29': temp_list[d][29], 'V30': temp_list[d][30], 'V31': temp_list[d][31],
+                               'V32': temp_list[d][32], 'V33': temp_list[d][33], 'V34': temp_list[d][34],
+                               'V35': temp_list[d][35], 'V36': temp_list[d][36], 'V37': temp_list[d][37],
+                               'V38': temp_list[d][38],
+                               'V39': temp_list[d][39], 'V40': temp_list[d][40], 'V41': temp_list[d][41],
+                               'V42': temp_list[d][42], 'V43': temp_list[d][43], 'V44': temp_list[d][44],
+                               'V45': temp_list[d][45], 'V46': temp_list[d][46], 'V47': temp_list[d][47],
+                               'V48': temp_list[d][48], 'V49': temp_list[d][49], 'V50': temp_list[d][50],
+                               'V51': temp_list[d][51],
+                               'V52': temp_list[d][52], 'V53': temp_list[d][53], 'V54': temp_list[d][54],
+                               'V55': temp_list[d][55], 'V56': temp_list[d][56], 'V57': temp_list[d][57],
+                               'V58': temp_list[d][58], 'V59': temp_list[d][59], 'V60': temp_list[d][60],
+                               'V61': temp_list[d][61], 'V62': temp_list[d][62], 'V63': temp_list[d][63],
+                               'V64': temp_list[d][64],
+                               'V65': temp_list[d][65], 'V66': temp_list[d][66], 'V67': temp_list[d][67],
+                               'V68': temp_list[d][68], 'V69': temp_list[d][69], 'V70': temp_list[d][70],
+                               'V71': temp_list[d][71], 'V72': temp_list[d][72], 'V73': temp_list[d][73],
+                               'V74': temp_list[d][74], 'V75': temp_list[d][75], 'V76': temp_list[d][76],
+                               'V77': temp_list[d][77],
+                               'V78': temp_list[d][78], 'V79': temp_list[d][79], 'V80': temp_list[d][80],
+                               'V81': temp_list[d][81], 'V82': temp_list[d][82], 'V83': temp_list[d][83],
+                               'V84': temp_list[d][84], 'V85': temp_list[d][85], 'V86': temp_list[d][86],
+                               'V87': temp_list[d][87], 'V88': temp_list[d][88], 'V89': temp_list[d][89],
+                               'V90': temp_list[d][90],
+                               'V91': temp_list[d][91], 'V92': temp_list[d][92], 'V93': temp_list[d][93],
+                               'V94': temp_list[d][94], 'V95': temp_list[d][95]}
+                    train = train.append(new_row, ignore_index=True)
             prev_site = site
             arr_index = 0
 
@@ -190,65 +268,125 @@ def generate_intersections(data):
         day += 1
 
     print("check")
-    return intersections
+    return train, test
+
+# def process_data(train, test, lags):
+#     """Process data
+#     Reshape and split train\test data.
+#
+#     # Arguments
+#         train: String, name of .csv train file.
+#         test: String, name of .csv test file.
+#         lags: integer, time lag.
+#     # Returns
+#         X_train: ndarray.
+#         y_train: ndarray.
+#         X_test: ndarray.
+#         y_test: ndarray.
+#         scaler: StandardScaler.
+#     """
+#
+#     attr = 'Lane 1 Flow (Veh/5 Minutes)'
+#     df1 = pd.read_csv(train, encoding='utf-8').fillna(0)
+#     df2 = pd.read_csv(test, encoding='utf-8').fillna(0)
+#
+#     flattened_data = df1.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
+#     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
+#
+#     flow1 = scaler.transform(df1).reshape(1, -1)[0]
+#     flow2 = scaler.transform(df2).reshape(1, -1)[0]
+#
+#     # flow1 = scaler.transform(df1[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+#     # flow2 = scaler.transform(df2[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+#
+#     flow1_copy = np.append(flow1, flow1)
+#     flow2_copy = np.append(flow2, flow2)
+#
+#     # Group data into arrays of 8 elements (defined by lags variable)
+#     train, test = [], []
+#     for i in range(len(flow1), len(flow1_copy)):
+#         arr = flow1_copy[i - lags: i + 1]
+#         np.insert(arr, 0, id)
+#         train.append(arr)
+#     for i in range(len(flow2), len(flow2_copy)):
+#         arr = flow2_copy[i - lags: i + 1]
+#         np.insert(arr, 0, id)
+#         test.append(arr)
+#
+#     # x = 0 .. 12, y = 13
+#     # Input and then last value as label
+#
+#     #Convert lists back into 2D arrays (~7k, 13)
+#     train = np.array(train)
+#     test = np.array(test)
+#     np.random.shuffle(train)
+#
+#     list = np.array(list)
+#
+#     X_train = train[:, :-1]
+#     y_train = train[:, -1]
+#     X_test = test[:, :-1]
+#     y_test = test[:, -1]
+#
+#     return X_train, y_train, X_test, y_test, scaler
 
 
-def process_data(data, lags):
-    flattened_data = data.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
+def process_data(train_path, test_path, lags):
+
+    # Get data
+
+    train_df = pd.read_csv(train_path, encoding='utf-8').fillna(0)
+    test_df = pd.read_csv(test_path, encoding='utf-8').fillna(0)
+
+    flattened_data = train_df.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
+    # train_df = scaler.transform(train_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
+    # test_df = scaler.transform(test_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
 
     arr_X_train = []
     arr_y_train = []
     arr_X_test = []
     arr_y_test = []
 
-    for index, row in data.iterrows():
-        # Read data
-        id = row["SCATS Number"]
-        site_data = row.iloc[11:].to_numpy().reshape(-1, 1)
-
-        # Normalize data
-        flow1 = scaler.transform(site_data).reshape(1, -1)[0]
-        flow2 = scaler.transform(site_data).reshape(1, -1)[0]
-
-        flow1_copy = np.append(flow1, flow1)
-        flow2_copy = np.append(flow2, flow2)
-
-        # Group data into arrays of 8 elements (defined by lags variable)
-        train, test = [], []
-        for i in range(len(flow1), len(flow1_copy)):
-            arr = flow1_copy[i - lags: i + 1]
-            np.insert(arr, 0, id)
-            train.append(arr)
-        for i in range(len(flow2), len(flow2_copy)):
-            arr = flow2_copy[i - lags: i + 1]
-            np.insert(arr, 0, id)
-            test.append(arr)
-
-        # Shuffle training data
-        train = np.array(train)
-        test = np.array(test)
-        np.random.shuffle(train)
-
-        # Separate label (y_...) from data (X_...)
-        X_train = train[:, :-1]
-        y_train = train[:, -1]
-        X_test = test[:, :-1]
-        y_test = test[:, -1]
-
-        # Add to the rest of the data
-        arr_X_train.extend(X_train)
-        arr_y_train.extend(y_train)
-        arr_X_test.extend(X_test)
-        arr_y_test.extend(y_test)
-
-    # Convert to numpy arrays
-    arr_X_train = np.array(arr_X_train)
-    arr_y_train = np.array(arr_y_train)
-    arr_X_test = np.array(arr_X_test)
-    arr_y_test = np.array(arr_y_test)
+    arr_X_train, arr_y_train = handle_data(train_df, scaler, False)
+    arr_X_test, arr_y_test = handle_data(test_df, scaler, True)
 
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
+
+
+def handle_data(data, scaler, test):
+    arr_X, arr_y = [], []
+
+    # Normalize data
+    flow1 = scaler.transform(data.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # Group data into arrays of 8 elements (defined by lags variable)
+    container = []
+    for i in range(lag, len(flow1)):
+        line = math.floor(i/96)
+        id = data["SCATS Number"].iloc[line]
+        tuple = flow1[i - lag: i + 1]
+        tuple = np.insert(tuple, 0, id)
+        container.append(tuple)
+
+    # Shuffle training data
+    container = np.array(container)
+    if not test:
+        np.random.shuffle(container)
+
+    # Separate label (y_...) from data (X_...)
+    X_train = container[:, :-1]
+    y_train = container[:, -1]
+
+    # Add to the rest of the data
+    arr_X.extend(X_train)
+    arr_y.extend(y_train)
+
+    # Convert to numpy arrays
+    arr_X = np.array(arr_X)
+    arr_y = np.array(arr_y)
+
+    return arr_X, arr_y
 
 
 def train(data, model_name):
@@ -371,7 +509,7 @@ def test_model(model_name):
     model = save.load_model(f"model/{model_name}.h5")
 
     # Process the data
-    _, _, X_test, y_test, scaler = process_data(intersections, lag)
+    _, _, X_test, y_test, scaler = process_data(train_file, test_file, lag)
 
     # Unscale the test labels
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
@@ -493,11 +631,11 @@ def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
 
 
 def distance_km(a_id, b_id):
-    a = intersections[a_id]
-    b = intersections[b_id]
-
-    delta_x = a[2] - b[2]
-    delta_y = a[1] - b[1]
+    a = intersections.loc[intersections["SCATS Number"] == a_id].iloc[0]
+    b = intersections.loc[intersections["SCATS Number"] == b_id].iloc[0]
+    # NB_LATITUDE,NB_LONGITUDE
+    delta_x = a.loc["NB_LATITUDE"] - b.loc["NB_LATITUDE"]
+    delta_y = a.loc["NB_LONGITUDE"] - b.loc["NB_LONGITUDE"]
 
     # 1 degree latitude/longitude = 111km
     return math.sqrt(delta_x ** 2 + delta_y ** 2) * 111
@@ -515,26 +653,58 @@ def total_distance_km(route):
 
 
 def predict_traffic_volume(site_id, time_index):
+    # Init the model
+    # Look up test data for SITE_ID (just one day)
+    # Convert TIME_INDEX (might already be done) and calc volume column
+    # Pass previous 8 volumes into the model, alongside SITE_ID and run .Predict()
+    # Unscale output
+    # Return output
+
+    # HOW TO ISOLATE
+    # Loop for length of test_x
+    # Check SITE_ID on first index and every 9 afterwards till it gets a match.
+    # Print error message on timeout
+
     # # Load the model
-    # model = save.load_model(f"model/{model_name}.h5")
 
-    # # Process the data
-    # _, _, X_test, y_test, scaler = process_data(data, lag)
 
-    # # Unscale the test labels
-    # y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
+    # Process the data
+    # test_x, g_scaler
 
-    # # Reshape the test data so it works with the model
-    # X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+    # Reshape the test data so it works with the model
+    # test = test_x
 
-    # # Predict using the model
-    # predicted = model.predict(X_test)
+    i = 0
+    prev_id = test_x[0][0]
+    for row in test_x:
+        id = row[0]
+        if id != prev_id:
+            prev_id = id
+        if id == site_id:
+            i += 1
+        if i == time_index:
+            input = row
 
-    # # Unscale predicted data
-    # predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
+    # i = 0
+    # for j in range(math.floor(len(test_x)/9)):
+    #     if test_x[i] == site_id:
+    #         input = text_x[i+time_index]
+    #         break
+    #     i += 9
+
+    X_test = np.reshape(input, (input.shape[0], input.shape[1], 1))
+
+    # Get test data
+    # Figure out format of X_test
+
+    # Predict using the model
+    predicted = MODEL.predict(X_test)
+
+    # Unscale predicted data
+    predicted = g_scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
     # return predicted[time_index]
-    return intersections[site_id][3][time_index]
+    return predicted
 
 
 def get_interpolated_traffic_volume(site_id, time_minutes):
@@ -643,23 +813,65 @@ def show_routes_on_map(routes):
     fig.show()
 
 
-if __name__ == "__main__":
-    # Get input arguments
-    # start_id = int(sys.argv[1])
-    # dest_id = int(sys.argv[2])
-    # start_time_minutes = military_to_minutes(sys.argv[3])
-    start_id = 2827
-    dest_id = 4270
-    start_time_minutes = "1547"
-    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+def main():
+    print('running main')
+    window = tk.Tk()
 
-    # Load the data
-    data = load_data()
-    # Fix averaging technique
-    intersections = generate_intersections(data)
+    # define widgets
+    canvas = tk.Canvas(window, width=600, height=500)
+    canvas.pack()
 
+    INTERSECTIONS = intersections["SCATS Number"].unique()
+
+    HOURS = []
+    for i in range(0, 24):
+        HOURS.append(i)
+
+    MINUTES = [0, 15, 30, 45]
+
+    hours = tk.IntVar(window)
+    hours.set(HOURS[0])  # default value
+    minutes = tk.IntVar(window)
+    minutes.set(MINUTES[0])  # default value
+    start = tk.StringVar(window)
+    start.set(INTERSECTIONS[0])  # default value
+    end = tk.StringVar(window)
+    end.set(INTERSECTIONS[0])  # default value
+
+    # right_offset, Start, length, end
+    # canvas.create_line(0, 100, 600, 100)
+
+    lbl_heading = tk.Label(window, text='Traffic Flow Prediction')
+    lbl_heading.config(font=('helvetica', 20))
+    lbl_time = tk.Label(window, text='Departure Time: ')
+    # txt_time = tk.Entry(window)
+    drp_hour = tk.OptionMenu(window, hours, *HOURS)
+    drp_minute = tk.OptionMenu(window, minutes, *MINUTES)
+    lbl_start = tk.Label(window, text='Starting Location: ')
+    drp_start = tk.OptionMenu(window, start, *INTERSECTIONS)
+    lbl_end = tk.Label(window, text='Destination: ')
+    drp_end = tk.OptionMenu(window, end, *INTERSECTIONS)
+    btn_exit = tk.Button(window, text='exit', command=window.destroy)
+    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_route(int((hours.get() * 60) + (minutes.get())), start.get(), end.get()))
+
+    # render widgets
+    canvas.create_window(300, 20, window=lbl_heading)
+    canvas.create_window(150, 60, window=lbl_time)
+    # canvas.create_window(450, 60, window=txt_time)
+    canvas.create_window(400, 60, window=drp_hour)
+    canvas.create_window(490, 60, window=drp_minute)
+    canvas.create_window(150, 100, window=lbl_start)
+    canvas.create_window(450, 100, window=drp_start)
+    canvas.create_window(150, 140, window=lbl_end)
+    canvas.create_window(450, 140, window=drp_end)
+    canvas.create_window(150, 200, window=btn_exit)
+    canvas.create_window(450, 200, window=btn_calculate)
+    window.mainloop()
+
+
+def calc_route(time, start_id, dest_id):
     # Get best routes
-    routes = a_star_multiple(start_id, dest_id, start_time_minutes)
+    routes = a_star_multiple(start_id, dest_id, time)
 
     # Print routes to console
     print_routes(routes)
@@ -668,3 +880,36 @@ if __name__ == "__main__":
 
     # Show on map
     show_routes_on_map(routes)
+
+
+if __name__ == "__main__":
+    # Get input arguments
+    # start_id = int(sys.argv[1])
+    # dest_id = int(sys.argv[2])
+    # start_time_minutes = military_to_minutes(sys.argv[3])
+    # start_id = 2827
+    # dest_id = 4270
+    # start_time_minutes = 1547
+    TRAIN = False
+    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+
+    # Load the data
+    if TRAIN:
+        DATA = load_data()
+        intersections, test_data = generate_intersections(data)
+        test_data.to_csv("data/test-data.csv", index=False)
+        intersections.to_csv("data/train-data.csv", index=False)
+        # Train models
+
+    if not os.path.isfile(test_file) and os.path.isfile(train_file):
+        DATA = load_data()
+        DATA, TEST_DATA = generate_intersections(data)
+        TEST_DATA.to_csv(test_file, index=False)
+
+    if os.path.isfile(f"model/{model_name}.h5"):
+        MODEL = save.load_model(f"model/{model_name}.h5")
+
+    intersections = pd.read_csv("data/train-data.csv")
+    train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
+
+    main()
