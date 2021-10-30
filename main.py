@@ -675,8 +675,10 @@ def predict_traffic_volume(site_id, time_index):
     # test = test_x
 
     i = 0
+    j = 0
     prev_id = test_x[0][0]
     for row in test_x:
+        j += 1
         id = row[0]
         if id != prev_id:
             prev_id = id
@@ -692,13 +694,13 @@ def predict_traffic_volume(site_id, time_index):
     #         break
     #     i += 9
 
-    X_test = np.reshape(input, (input.shape[0], input.shape[1], 1))
+    X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
 
     # Get test data
     # Figure out format of X_test
 
     # Predict using the model
-    predicted = MODEL.predict(X_test)
+    predicted = MODEL.predict(X_test[j])
 
     # Unscale predicted data
     predicted = g_scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
@@ -887,9 +889,9 @@ if __name__ == "__main__":
     # start_id = int(sys.argv[1])
     # dest_id = int(sys.argv[2])
     # start_time_minutes = military_to_minutes(sys.argv[3])
-    # start_id = 2827
-    # dest_id = 4270
-    # start_time_minutes = 1547
+    start_id = 2827
+    dest_id = 4270
+    start_time_minutes = military_to_minutes("1547")
     TRAIN = False
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
@@ -911,5 +913,7 @@ if __name__ == "__main__":
 
     intersections = pd.read_csv("data/train-data.csv")
     train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
+
+    calc_route(start_time_minutes, start_id, dest_id)
 
     main()
