@@ -631,11 +631,11 @@ def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=10):
 
 
 def distance_km(a_id, b_id):
-    a = intersections.loc[intersections["SCATS Number"] == a_id].iloc[0]
-    b = intersections.loc[intersections["SCATS Number"] == b_id].iloc[0]
-    # NB_LATITUDE,NB_LONGITUDE
-    delta_x = a.loc["NB_LATITUDE"] - b.loc["NB_LATITUDE"]
-    delta_y = a.loc["NB_LONGITUDE"] - b.loc["NB_LONGITUDE"]
+    a = intersections[intersections["SCATS Number"] == a_id].iloc[0]
+    b = intersections[intersections["SCATS Number"] == b_id].iloc[0]
+
+    delta_x = a["NB_LONGITUDE"] - b["NB_LONGITUDE"]
+    delta_y = a["NB_LATITUDE"] - b["NB_LATITUDE"]
 
     # 1 degree latitude/longitude = 111km
     return math.sqrt(delta_x ** 2 + delta_y ** 2) * 111
