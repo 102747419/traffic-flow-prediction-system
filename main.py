@@ -268,7 +268,6 @@ def generate_intersections(data):
 
         day += 1
 
-    print("check")
     return train, test
 
 # def process_data(train, test, lags):
@@ -603,7 +602,7 @@ def a_star(start_id, dest_id, start_time_minutes, visited):
     return path
 
 
-def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=10):
+def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
     solutions = []
     visited = {}
 
@@ -910,9 +909,10 @@ if __name__ == "__main__":
         intersections.to_csv("data/train-data.csv", index=False)
         # Train models
 
-    if not os.path.isfile(test_file) and os.path.isfile(train_file):
+    if not os.path.isfile(test_file) or not os.path.isfile(train_file):
         DATA = load_data()
         DATA, TEST_DATA = generate_intersections(DATA)
+        DATA.to_csv(train_file, index=False)
         TEST_DATA.to_csv(test_file, index=False)
 
     if os.path.isfile(f"model/{model_name}.h5"):
