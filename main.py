@@ -1,4 +1,5 @@
 import math
+import os
 import sys
 import tkinter as tk
 
@@ -14,7 +15,6 @@ from keras.layers.recurrent import GRU, LSTM
 from keras.models import Sequential
 from keras.saving import save
 from sklearn.preprocessing import MinMaxScaler
-import os
 
 import astar
 
@@ -334,6 +334,8 @@ def process_data(train_path, test_path, lags):
 
     # Get data
 
+    print("Begin processing data...")
+
     train_df = pd.read_csv(train_path, encoding='utf-8').fillna(0)
     test_df = pd.read_csv(test_path, encoding='utf-8').fillna(0)
 
@@ -349,6 +351,8 @@ def process_data(train_path, test_path, lags):
 
     arr_X_train, arr_y_train = handle_data(train_df, scaler, False)
     arr_X_test, arr_y_test = handle_data(test_df, scaler, True)
+
+    print("Finished processing data")
 
     return arr_X_train, arr_y_train, arr_X_test, arr_y_test, scaler
 
@@ -658,7 +662,6 @@ def predict_traffic_volume(site_id, time_index):
     # Get regression line by passing in test_x to the model (do once on init)
     #
 
-
     # Init the model
     # Look up test data for SITE_ID (just one day)
     # Convert TIME_INDEX (might already be done) and calc volume column
@@ -672,22 +675,25 @@ def predict_traffic_volume(site_id, time_index):
     # Print error message on timeout
 
     # Reshape the test data so it works with the model
-    test = test_x
 
-    i = -1
-    j = 0
-    prev_id = test_x[0][0]
-    for row in test_x:
-        id = row[0]
-        if id != prev_id:
-            prev_id = id
-        if id == site_id:
-            i += 1
-        if i == time_index:
-            break
-        j += 1
+    # i = -1
+    # j = 0
+    # prev_id = test_x[0][0]
+    # for row in test_x:
+    #     id = row[0]
+    #     if id != prev_id:
+    #         prev_id = id
+    #     if id == site_id:
+    #         i += 1
+    #     if i == time_index:
+    #         break
+    #     j += 1
 
-    return REGRESSION[j]
+    unique_sites = intersections.drop_duplicates("SCATS Number")
+    scats_numbers = list(unique_sites["SCATS Number"].values)
+    site_index = scats_numbers.index(site_id) * 96 + time_index
+
+    return REGRESSION[site_index]
 
 
 def get_interpolated_traffic_volume(site_id, time_minutes):
@@ -857,8 +863,11 @@ def main():
 
 
 def calc_route(time, start_id, dest_id):
+    print("Begin calculating routes...")
     # Get best routes
     routes = a_star_multiple(start_id, dest_id, time)
+
+    print("Finished calculating routes")
 
     # Print routes to console
     print_routes(routes)
@@ -876,7 +885,7 @@ if __name__ == "__main__":
     # start_time_minutes = military_to_minutes(sys.argv[3])
     start_id = 2827
     dest_id = 4270
-    start_time_minutes = military_to_minutes("1737")
+    start_time_minutes = military_to_minutes("0000")
     TRAIN = False
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
