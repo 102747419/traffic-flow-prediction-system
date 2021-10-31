@@ -151,14 +151,13 @@ def generate_intersections(data):
     prev_id = 0
     prev_site = data.iloc[0]["SCATS Number"]
     day = 0
-    lat = data.iloc[0]["NB_LATITUDE"]
-    long = data.iloc[0]["NB_LONGITUDE"]
+    lat = 0
+    long = 0
     for i, row in data.iterrows():
         id = row["id"]
         site = row["SCATS Number"]
         if site != prev_site:
             # Calculate averages and read to DF
-            arr_index += 1
             lat = lat / arr_index
             long = long / arr_index
             temp_list = [[0]*96]*31
@@ -253,6 +252,8 @@ def generate_intersections(data):
                     train = train.append(new_row, ignore_index=True)
             prev_site = site
             arr_index = 0
+            lat = 0
+            long = 0
 
         if id != prev_id:
             prev_id = id
