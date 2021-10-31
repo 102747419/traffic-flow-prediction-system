@@ -82,6 +82,10 @@ def debug_code():
 
 
 def load_data():
+    """
+    Loads the data from the csv file and returns a dataframe of the data.
+    """
+
     # debug_code()
 
     # Read data from csv files
@@ -118,6 +122,10 @@ def load_data():
 
 
 def generate_intersections(data):
+    """
+    Generates a dataframe of intersections with the traffic volume data averaged for each day.
+    """
+
     test = pd.DataFrame(columns=['SCATS Number',
                                  'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09',
                                  'V10', 'V11', 'V12',
@@ -269,68 +277,11 @@ def generate_intersections(data):
 
     return train, test
 
-# def process_data(train, test, lags):
-#     """Process data
-#     Reshape and split train\test data.
-#
-#     # Arguments
-#         train: String, name of .csv train file.
-#         test: String, name of .csv test file.
-#         lags: integer, time lag.
-#     # Returns
-#         X_train: ndarray.
-#         y_train: ndarray.
-#         X_test: ndarray.
-#         y_test: ndarray.
-#         scaler: StandardScaler.
-#     """
-#
-#     attr = 'Lane 1 Flow (Veh/5 Minutes)'
-#     df1 = pd.read_csv(train, encoding='utf-8').fillna(0)
-#     df2 = pd.read_csv(test, encoding='utf-8').fillna(0)
-#
-#     flattened_data = df1.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
-#     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
-#
-#     flow1 = scaler.transform(df1).reshape(1, -1)[0]
-#     flow2 = scaler.transform(df2).reshape(1, -1)[0]
-#
-#     # flow1 = scaler.transform(df1[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
-#     # flow2 = scaler.transform(df2[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
-#
-#     flow1_copy = np.append(flow1, flow1)
-#     flow2_copy = np.append(flow2, flow2)
-#
-#     # Group data into arrays of 8 elements (defined by lags variable)
-#     train, test = [], []
-#     for i in range(len(flow1), len(flow1_copy)):
-#         arr = flow1_copy[i - lags: i + 1]
-#         np.insert(arr, 0, id)
-#         train.append(arr)
-#     for i in range(len(flow2), len(flow2_copy)):
-#         arr = flow2_copy[i - lags: i + 1]
-#         np.insert(arr, 0, id)
-#         test.append(arr)
-#
-#     # x = 0 .. 12, y = 13
-#     # Input and then last value as label
-#
-#     #Convert lists back into 2D arrays (~7k, 13)
-#     train = np.array(train)
-#     test = np.array(test)
-#     np.random.shuffle(train)
-#
-#     list = np.array(list)
-#
-#     X_train = train[:, :-1]
-#     y_train = train[:, -1]
-#     X_test = test[:, :-1]
-#     y_test = test[:, -1]
-#
-#     return X_train, y_train, X_test, y_test, scaler
-
 
 def process_data(train_path, test_path, lags):
+    """
+    Processes the data so it can be used for the model.
+    """
 
     # Get data
 
@@ -358,6 +309,10 @@ def process_data(train_path, test_path, lags):
 
 
 def handle_data(data, scaler, test):
+    """
+    Groups data into chunks of lags and creates a list of arrays.
+    """
+
     arr_X, arr_y = [], []
 
     # Normalize data
@@ -396,6 +351,10 @@ def handle_data(data, scaler, test):
 
 
 def train(data, model_name):
+    """
+    Train the model.
+    """
+
     X_train, y_train, _, _, _ = process_data(train_file, test_file, lag)
 
     model, train_func, name = get_model(model_name)
@@ -411,6 +370,10 @@ def train(data, model_name):
 
 
 def train_model(model, X_train, y_train, name, config):
+    """
+    Train most models.
+    """
+
     model.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
     hist = model.fit(
         X_train, y_train,
@@ -424,6 +387,10 @@ def train_model(model, X_train, y_train, name, config):
 
 
 def train_saes(models, X_train, y_train, name, config):
+    """
+    Train the SAES model.
+    """
+
     temp = X_train
 
     for i in range(len(models) - 1):
@@ -451,6 +418,10 @@ def train_saes(models, X_train, y_train, name, config):
 
 
 def get_model(name):
+    """
+    Get the model by its name.
+    """
+
     if name == "saes":
         return get_saes([lag, 400, 400, 400, 1])
     if name == "lstm":
@@ -461,6 +432,10 @@ def get_model(name):
 
 
 def get_gru(layers):
+    """
+    Get the GRU model with the given layers.
+    """
+
     model = Sequential()
     model.add(GRU(layers[1], input_shape=(layers[0], 1), return_sequences=True))
     model.add(GRU(layers[2]))
@@ -471,6 +446,10 @@ def get_gru(layers):
 
 
 def get_lstm(units):
+    """
+    Get the LSTM model with the given layers.
+    """
+
     model = Sequential()
     model.add(LSTM(units[1], input_shape=(units[0], 1), return_sequences=True))
     model.add(LSTM(units[2]))
@@ -481,6 +460,10 @@ def get_lstm(units):
 
 
 def get_sae(inputs, hidden, output):
+    """
+    Get the SAE model with the given layers.
+    """
+
     model = Sequential()
     model.add(Dense(hidden, input_dim=inputs, name="hidden"))
     model.add(Activation("sigmoid"))
@@ -491,6 +474,10 @@ def get_sae(inputs, hidden, output):
 
 
 def get_saes(layers):
+    """
+    Get the SAES model with the given layers.
+    """
+
     sae1 = get_sae(layers[0], layers[1], layers[-1])
     sae2 = get_sae(layers[1], layers[2], layers[-1])
     sae3 = get_sae(layers[2], layers[3], layers[-1])
@@ -511,6 +498,10 @@ def get_saes(layers):
 
 
 def test_model(model_name):
+    """
+    Test the model.
+    """
+
     # Load the model
     model = save.load_model(f"model/{model_name}.h5")
 
@@ -534,6 +525,10 @@ def test_model(model_name):
 
 
 def plot_results(y_true, y_pred, name):
+    """
+    Plot the results on a graph.
+    """
+
     day = 1
     data_range = range(day * 96, (day + 1) * 96)
 
@@ -561,6 +556,10 @@ def plot_results(y_true, y_pred, name):
 # https://stackoverflow.com/a/8922151/10456572
 # Replaced with A*
 def dfs(start_id, dest_id):
+    """
+    Depth-first search to find the shortest path between two intersections.
+    """
+
     # Maintain a queue of paths
     queue = []
 
@@ -588,6 +587,10 @@ def dfs(start_id, dest_id):
 
 
 def a_star(start_id, dest_id, start_time_minutes, visited):
+    """
+    A* search to find the shortest path between two intersections.
+    """
+
     def neighbors(n):
         for n1 in graph[n]:
             yield n1
@@ -609,6 +612,10 @@ def a_star(start_id, dest_id, start_time_minutes, visited):
 
 
 def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
+    """
+    A* search to find multiple shortest paths between two intersections, sorted by travel time.
+    """
+
     solutions = []
     visited = {}
 
@@ -637,6 +644,10 @@ def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
 
 
 def distance_km(a_id, b_id):
+    """
+    Get the distance between two intersections.
+    """
+
     a = intersections[intersections["SCATS Number"] == a_id].iloc[0]
     b = intersections[intersections["SCATS Number"] == b_id].iloc[0]
 
@@ -648,6 +659,10 @@ def distance_km(a_id, b_id):
 
 
 def total_distance_km(route):
+    """
+    Get the total distance of a route.
+    """
+
     dist = 0
 
     for i in range(len(route) - 1):
@@ -659,35 +674,9 @@ def total_distance_km(route):
 
 
 def predict_traffic_volume(site_id, time_index):
-    # Get regression line by passing in test_x to the model (do once on init)
-    #
-
-    # Init the model
-    # Look up test data for SITE_ID (just one day)
-    # Convert TIME_INDEX (might already be done) and calc volume column
-    # Pass previous 8 volumes into the model, alongside SITE_ID and run .Predict()
-    # Unscale output
-    # Return output
-
-    # HOW TO ISOLATE
-    # Loop for length of test_x
-    # Check SITE_ID on first index and every 9 afterwards till it gets a match.
-    # Print error message on timeout
-
-    # Reshape the test data so it works with the model
-
-    # i = -1
-    # j = 0
-    # prev_id = test_x[0][0]
-    # for row in test_x:
-    #     id = row[0]
-    #     if id != prev_id:
-    #         prev_id = id
-    #     if id == site_id:
-    #         i += 1
-    #     if i == time_index:
-    #         break
-    #     j += 1
+    """
+    Predict the traffic volume at a site at a given time.
+    """
 
     unique_sites = intersections.drop_duplicates("SCATS Number")
     scats_numbers = list(unique_sites["SCATS Number"].values)
@@ -697,6 +686,10 @@ def predict_traffic_volume(site_id, time_index):
 
 
 def get_interpolated_traffic_volume(site_id, time_minutes):
+    """
+    Get the interpolated traffic volume at a site at a given time.
+    """
+
     # Calculate the time indices
     index1 = math.floor(time_minutes / 15) % 96
     index2 = math.ceil(time_minutes / 15) % 96
@@ -713,6 +706,10 @@ def get_interpolated_traffic_volume(site_id, time_minutes):
 
 
 def get_traffic_volume(a_id, b_id, time_minutes):
+    """
+    Get the averaged interpolated traffic volume between two intersections at a given time.
+    """
+
     # Calculate the duration of the journey between these two connected sites
     # Assuming we are going 60km/h, `time_h = distance_km / speed_kmh` simplifies to `time_m = distance_km`
     duration = distance_km(a_id, b_id)
@@ -730,11 +727,19 @@ def get_traffic_volume(a_id, b_id, time_minutes):
 
 
 def travel_time_mins(a_id, b_id, time_minutes):
+    """
+    Get the travel time between two intersections at a given time.
+    """
+
     # Every 120 cars adds 1 minute to the travel time
     return distance_km(a_id, b_id) + get_traffic_volume(a_id, b_id, time_minutes) / 120
 
 
 def total_travel_time_mins(route, start_time_minutes):
+    """
+    Get the total travel time of a route when starting at a given time.
+    """
+
     time = start_time_minutes
 
     for i in range(len(route) - 1):
@@ -744,12 +749,25 @@ def total_travel_time_mins(route, start_time_minutes):
 
 
 def military_to_minutes(military):
+    """
+    Convert a military time string to minutes.
+    Doesn't need to be rounded to the nearest 15 minutes.
+    Format: HHMM
+    Example: "0730"
+    """
+
     hour = int(military[:2])
     minutes = int(military[2:])
     return hour * 60 + minutes
 
 
 def format_duration(minutes):
+    """
+    Format a duration in minutes to a string.
+    Format: HH:MM:SS
+    Example: "00:30:20"
+    """
+
     mins = math.floor(minutes)
     hours = math.floor(mins / 60)
     mins %= 60
@@ -760,6 +778,10 @@ def format_duration(minutes):
 
 
 def print_routes(routes):
+    """
+    Print the routes to the console with the intersections along the route, the total travel time, and the total distance.
+    """
+
     for i, route in enumerate(routes):
         distance = total_distance_km(route)
         travel_time = total_travel_time_mins(route, start_time_minutes)
@@ -771,7 +793,9 @@ def print_routes(routes):
 
 
 def show_routes_on_map(routes):
-    # Show intersections on map
+    """
+    Show the routes on a map in a new browser window.
+    """
 
     unique_sites = intersections.drop_duplicates("SCATS Number")
     scats_numbers = unique_sites["SCATS Number"].values
