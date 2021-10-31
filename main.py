@@ -67,26 +67,10 @@ graph = {
 }
 
 
-def debug_code():
-    test_df = pd.DataFrame(columns=["a", "b", "c"])
-    for i in range(10):
-        row = {"a": i, "b": i+100, "c": i+1000}
-        test_df = test_df.append(row, ignore_index=True)
-        row = {"a": i, "b": i + 200, "c": i + 2000}
-        test_df = test_df.append(row, ignore_index=True)
-
-    # Get
-    temp = test_df.loc[test_df["a"] == 3].iloc[0]
-    # NB_LATITUDE,NB_LONGITUDE
-    delta_x = temp.loc["c"] - temp.loc["b"]
-
-
 def load_data():
     """
     Loads the data from the csv file and returns a dataframe of the data.
     """
-
-    # debug_code()
 
     # Read data from csv files
     sites = pd.read_csv("data/scats-sites.csv")
@@ -97,7 +81,7 @@ def load_data():
     data = data[data["SCATS Number"].isin(sites["Site Number"])]
 
     # Filter out data at (0,0)
-    # data = data[(data["NB_LATITUDE"] != 0) & (data["NB_LONGITUDE"] != 0)]
+    data = data[(data["NB_LATITUDE"] != 0) & (data["NB_LONGITUDE"] != 0)]
 
     # Offset positions to align with map
     data["NB_LATITUDE"] = data["NB_LATITUDE"].add(0.0015)
@@ -283,8 +267,6 @@ def process_data(train_path, test_path, lags):
     Processes the data so it can be used for the model.
     """
 
-    # Get data
-
     print("Begin processing data...")
 
     train_df = pd.read_csv(train_path, encoding='utf-8').fillna(0)
@@ -292,8 +274,6 @@ def process_data(train_path, test_path, lags):
 
     flattened_data = train_df.iloc[:, 4:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
-    # train_df = scaler.transform(train_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
-    # test_df = scaler.transform(test_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
 
     arr_X_train = []
     arr_y_train = []
@@ -350,7 +330,7 @@ def handle_data(data, scaler, test):
     return arr_X, arr_y
 
 
-def train(data, model_name):
+def train(model_name):
     """
     Train the model.
     """
@@ -497,7 +477,7 @@ def get_saes(layers):
     return models, train_saes, "saes"
 
 
-def test_model(model_name):
+def test(model_name):
     """
     Test the model.
     """
@@ -521,7 +501,7 @@ def test_model(model_name):
     predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
     # Plot results!
-    plot_results(y_test, predicted, "gru")
+    plot_results(y_test, predicted, model_name)
 
 
 def plot_results(y_true, y_pred, name):
@@ -831,62 +811,7 @@ def show_routes_on_map(routes):
     fig.show()
 
 
-def main():
-    window = tk.Tk()
-
-    # define widgets
-    canvas = tk.Canvas(window, width=600, height=500)
-    canvas.pack()
-
-    INTERSECTIONS = intersections["SCATS Number"].unique()
-
-    HOURS = []
-    for i in range(0, 24):
-        HOURS.append(i)
-
-    MINUTES = [0, 15, 30, 45]
-
-    hours = tk.IntVar(window)
-    hours.set(HOURS[0])  # default value
-    minutes = tk.IntVar(window)
-    minutes.set(MINUTES[0])  # default value
-    start = tk.StringVar(window)
-    start.set(INTERSECTIONS[0])  # default value
-    end = tk.StringVar(window)
-    end.set(INTERSECTIONS[0])  # default value
-
-    # right_offset, Start, length, end
-    # canvas.create_line(0, 100, 600, 100)
-
-    lbl_heading = tk.Label(window, text='Traffic Flow Prediction')
-    lbl_heading.config(font=('helvetica', 20))
-    lbl_time = tk.Label(window, text='Departure Time: ')
-    # txt_time = tk.Entry(window)
-    drp_hour = tk.OptionMenu(window, hours, *HOURS)
-    drp_minute = tk.OptionMenu(window, minutes, *MINUTES)
-    lbl_start = tk.Label(window, text='Starting Location: ')
-    drp_start = tk.OptionMenu(window, start, *INTERSECTIONS)
-    lbl_end = tk.Label(window, text='Destination: ')
-    drp_end = tk.OptionMenu(window, end, *INTERSECTIONS)
-    btn_exit = tk.Button(window, text='exit', command=window.destroy)
-    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_route(int((hours.get() * 60) + (minutes.get())), start.get(), end.get()))
-
-    # render widgets
-    canvas.create_window(300, 20, window=lbl_heading)
-    canvas.create_window(150, 60, window=lbl_time)
-    # canvas.create_window(450, 60, window=txt_time)
-    canvas.create_window(400, 60, window=drp_hour)
-    canvas.create_window(490, 60, window=drp_minute)
-    canvas.create_window(150, 100, window=lbl_start)
-    canvas.create_window(450, 100, window=drp_start)
-    canvas.create_window(150, 140, window=lbl_end)
-    canvas.create_window(450, 140, window=drp_end)
-    canvas.create_window(150, 200, window=btn_exit)
-    canvas.create_window(450, 200, window=btn_calculate)
-    window.mainloop()
-
-
-def calc_route(time, start_id, dest_id):
+def calc_routes(time, start_id, dest_id):
     print("Begin calculating routes...")
     # Get best routes
     routes = a_star_multiple(start_id, dest_id, time)
@@ -896,7 +821,7 @@ def calc_route(time, start_id, dest_id):
     # Print routes to console
     print_routes(routes)
 
-    # input("\nPress Enter to continue...")
+    input("\nPress Enter to continue...")
 
     # Show on map
     show_routes_on_map(routes)
@@ -904,17 +829,13 @@ def calc_route(time, start_id, dest_id):
 
 if __name__ == "__main__":
     # Get input arguments
-    # start_id = int(sys.argv[1])
-    # dest_id = int(sys.argv[2])
-    # start_time_minutes = military_to_minutes(sys.argv[3])
-    start_id = 2827
-    dest_id = 4270
-    start_time_minutes = military_to_minutes("0000")
-    TRAIN = False
+    start_id = int(sys.argv[1])
+    dest_id = int(sys.argv[2])
+    start_time_minutes = military_to_minutes(sys.argv[3])
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
     # Load the data
-    if TRAIN:
+    if False:
         DATA = load_data()
         intersections, test_data = generate_intersections(DATA)
         test_data.to_csv("data/test-data.csv", index=False)
@@ -940,6 +861,4 @@ if __name__ == "__main__":
 
     intersections = pd.read_csv("data/train-data.csv")
 
-    calc_route(start_time_minutes, start_id, dest_id)
-
-    # main()
+    calc_routes(start_time_minutes, start_id, dest_id)
