@@ -136,14 +136,14 @@ def generate_intersections(data):
                                  'V91', 'V92', 'V93', 'V94', 'V95'])
 
     train = pd.DataFrame(columns=['SCATS Number', 'NB_LATITUDE', 'NB_LONGITUDE', 'Date',
-                             'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09', 'V10', 'V11', 'V12',
-                             'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25',
-                             'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38',
-                             'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51',
-                             'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64',
-                             'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77',
-                             'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90',
-                             'V91', 'V92', 'V93', 'V94', 'V95'])
+                                  'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09', 'V10', 'V11', 'V12',
+                                  'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25',
+                                  'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38',
+                                  'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51',
+                                  'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64',
+                                  'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77',
+                                  'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90',
+                                  'V91', 'V92', 'V93', 'V94', 'V95'])
 
     connection_arrays = [[[0 for volume in range(96)] for day in range(31)] for sensor in range(10)]
 
@@ -669,7 +669,6 @@ def predict_traffic_volume(site_id, time_index):
 
     # # Load the model
 
-
     # Process the data
     # test_x, g_scaler
 
@@ -787,13 +786,18 @@ def print_routes(routes):
 
 def show_routes_on_map(routes):
     # Show intersections on map
-    intersection_values = list(intersections.values())
+
+    unique_sites = intersections.drop_duplicates("SCATS Number")
+    scats_numbers = unique_sites["SCATS Number"].values
+    latitudes = unique_sites["NB_LATITUDE"]
+    longitudes = unique_sites["NB_LONGITUDE"]
+
     fig = go.Figure(go.Scattermapbox(
         name="Intersections",
         mode="markers",
-        hovertext=[f"SCATS Number: {x[0]}" for x in intersection_values],
-        lon=[x[2] for x in intersection_values],
-        lat=[x[1] for x in intersection_values],
+        hovertext=[f"SCATS Number: {x}" for x in scats_numbers],
+        lon=[x for x in longitudes],
+        lat=[x for x in latitudes],
         marker={"size": 10}))
 
     # Enumerate over routes
@@ -804,9 +808,9 @@ def show_routes_on_map(routes):
         fig.add_trace(go.Scattermapbox(
             name=f"Route {i + 1} {format_duration(travel_time)}",
             mode="markers+lines",
-            hovertext=[intersections[x][0] for x in route],
-            lon=[intersections[x][2] for x in route],
-            lat=[intersections[x][1] for x in route],
+            hovertext=[x for x in route],
+            lon=[unique_sites.loc[unique_sites["SCATS Number"] == x, "NB_LONGITUDE"].values[0] for x in route],
+            lat=[unique_sites.loc[unique_sites["SCATS Number"] == x, "NB_LATITUDE"].values[0] for x in route],
             marker={"size": 10}, line={"width": 4}))
 
     # Configure map
@@ -918,4 +922,4 @@ if __name__ == "__main__":
 
     calc_route(start_time_minutes, start_id, dest_id)
 
-    main()
+    # main()
