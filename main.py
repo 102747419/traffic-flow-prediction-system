@@ -21,7 +21,7 @@ import astar
 lag = 8
 train_file = "data/train-data.csv"
 test_file = "data/test-data.csv"
-config = {"batch": 50, "epochs": 20}
+config = {"batch": 40, "epochs": 4}
 
 graph = {
     970: [2846, 3685],
@@ -264,7 +264,6 @@ def generate_intersections(data):
         # Read volumes into array
         for v in range(0, 96):
             connection_arrays[arr_index][day][v] = row[v+11]
-            # print(f"Line: {i+1}, Day/Vol: {day}, {v} = {connection_arrays[arr_index][day][v]}")
 
         day += 1
 
@@ -338,7 +337,7 @@ def process_data(train_path, test_path, lags):
     train_df = pd.read_csv(train_path, encoding='utf-8').fillna(0)
     test_df = pd.read_csv(test_path, encoding='utf-8').fillna(0)
 
-    flattened_data = train_df.iloc[:, 11:].to_numpy().flatten().reshape(-1, 1)
+    flattened_data = train_df.iloc[:, 4:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
     # train_df = scaler.transform(train_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
     # test_df = scaler.transform(test_df.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
@@ -358,7 +357,10 @@ def handle_data(data, scaler, test):
     arr_X, arr_y = [], []
 
     # Normalize data
-    flow1 = scaler.transform(data.iloc[:, 11:].values.reshape(-1, 1)).reshape(1, -1)[0]
+    if test:
+        flow1 = scaler.transform(data.iloc[:, 1:].values.reshape(-1, 1)).reshape(1, -1)[0]
+    else:
+        flow1 = scaler.transform(data.iloc[:, 4:].values.reshape(-1, 1)).reshape(1, -1)[0]
 
     # Group data into arrays of 8 elements (defined by lags variable)
     container = []
@@ -390,7 +392,7 @@ def handle_data(data, scaler, test):
 
 
 def train(data, model_name):
-    X_train, y_train, _, _, _ = process_data(intersections, lag)
+    X_train, y_train, _, _, _ = process_data(train_file, test_file, lag)
 
     model, train_func, name = get_model(model_name)
 
@@ -653,8 +655,10 @@ def total_distance_km(route):
 
 
 def predict_traffic_volume(site_id, time_index):
+    # Get regression line by passing in test_x to the model (do once on init)
+    #
 
-    return 50
+
     # Init the model
     # Look up test data for SITE_ID (just one day)
     # Convert TIME_INDEX (might already be done) and calc volume column
@@ -667,53 +671,29 @@ def predict_traffic_volume(site_id, time_index):
     # Check SITE_ID on first index and every 9 afterwards till it gets a match.
     # Print error message on timeout
 
-    # # Load the model
-
-    # Process the data
-    # test_x, g_scaler
-
     # Reshape the test data so it works with the model
-    # test = test_x
+    test = test_x
 
-    # i = 0
-    # j = 0
-    # prev_id = test_x[0][0]
-    # for row in test_x:
-    #     j += 1
-    #     id = row[0]
-    #     if id != prev_id:
-    #         prev_id = id
-    #     if id == site_id:
-    #         i += 1
-    #     if i == time_index:
-    #         input = row
+    i = -1
+    j = 0
+    prev_id = test_x[0][0]
+    for row in test_x:
+        id = row[0]
+        if id != prev_id:
+            prev_id = id
+        if id == site_id:
+            i += 1
+        if i == time_index:
+            break
+        j += 1
 
-    # i = 0
-    # for j in range(math.floor(len(test_x)/9)):
-    #     if test_x[i] == site_id:
-    #         input = text_x[i+time_index]
-    #         break
-    #     i += 9
-
-    # X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
-
-    # Get test data
-    # Figure out format of X_test
-
-    # Predict using the model
-    # predicted = MODEL.predict(X_test[j])
-    #
-    # # Unscale predicted data
-    # predicted = g_scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
-
-    # return 50
-    # return predicted
+    return REGRESSION[j]
 
 
 def get_interpolated_traffic_volume(site_id, time_minutes):
     # Calculate the time indices
-    index1 = math.floor(time_minutes / 15)
-    index2 = math.ceil(time_minutes / 15)
+    index1 = math.floor(time_minutes / 15) % 96
+    index2 = math.ceil(time_minutes / 15) % 96
 
     # Calculate how much to interpolate
     t = (time_minutes % 15) / 15
@@ -822,7 +802,6 @@ def show_routes_on_map(routes):
 
 
 def main():
-    print('running main')
     window = tk.Tk()
 
     # define widgets
@@ -897,7 +876,7 @@ if __name__ == "__main__":
     # start_time_minutes = military_to_minutes(sys.argv[3])
     start_id = 2827
     dest_id = 4270
-    start_time_minutes = military_to_minutes("1547")
+    start_time_minutes = military_to_minutes("1737")
     TRAIN = False
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
@@ -914,12 +893,19 @@ if __name__ == "__main__":
         DATA, TEST_DATA = generate_intersections(DATA)
         DATA.to_csv(train_file, index=False)
         TEST_DATA.to_csv(test_file, index=False)
+        DATA.to_csv(train_file, index=False)
 
     if os.path.isfile(f"model/{model_name}.h5"):
         MODEL = save.load_model(f"model/{model_name}.h5")
+        train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
+        X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
+        REGRESSION = MODEL.predict(X_test)
+        REGRESSION = g_scaler.inverse_transform(REGRESSION.reshape(-1, 1)).reshape(1, -1)[0]
+    else:
+        print("Please train the model.")
+        sys.exit()
 
     intersections = pd.read_csv("data/train-data.csv")
-    train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
 
     calc_route(start_time_minutes, start_id, dest_id)
 
