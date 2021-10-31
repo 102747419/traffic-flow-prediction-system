@@ -602,7 +602,7 @@ def a_star(start_id, dest_id, start_time_minutes, visited):
     return path
 
 
-def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=500):
+def a_star_multiple(start_id, dest_id, start_time_minutes, routes=5, tries=10):
     solutions = []
     visited = {}
 
@@ -653,6 +653,8 @@ def total_distance_km(route):
 
 
 def predict_traffic_volume(site_id, time_index):
+
+    return 50
     # Init the model
     # Look up test data for SITE_ID (just one day)
     # Convert TIME_INDEX (might already be done) and calc volume column
@@ -674,18 +676,18 @@ def predict_traffic_volume(site_id, time_index):
     # Reshape the test data so it works with the model
     # test = test_x
 
-    i = 0
-    j = 0
-    prev_id = test_x[0][0]
-    for row in test_x:
-        j += 1
-        id = row[0]
-        if id != prev_id:
-            prev_id = id
-        if id == site_id:
-            i += 1
-        if i == time_index:
-            input = row
+    # i = 0
+    # j = 0
+    # prev_id = test_x[0][0]
+    # for row in test_x:
+    #     j += 1
+    #     id = row[0]
+    #     if id != prev_id:
+    #         prev_id = id
+    #     if id == site_id:
+    #         i += 1
+    #     if i == time_index:
+    #         input = row
 
     # i = 0
     # for j in range(math.floor(len(test_x)/9)):
@@ -694,19 +696,19 @@ def predict_traffic_volume(site_id, time_index):
     #         break
     #     i += 9
 
-    X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
+    # X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
 
     # Get test data
     # Figure out format of X_test
 
     # Predict using the model
-    predicted = MODEL.predict(X_test[j])
+    # predicted = MODEL.predict(X_test[j])
+    #
+    # # Unscale predicted data
+    # predicted = g_scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
-    # Unscale predicted data
-    predicted = g_scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
-
-    # return predicted[time_index]
-    return predicted
+    # return 50
+    # return predicted
 
 
 def get_interpolated_traffic_volume(site_id, time_minutes):
@@ -878,7 +880,7 @@ def calc_route(time, start_id, dest_id):
     # Print routes to console
     print_routes(routes)
 
-    input("\nPress Enter to continue...")
+    # input("\nPress Enter to continue...")
 
     # Show on map
     show_routes_on_map(routes)
@@ -898,14 +900,14 @@ if __name__ == "__main__":
     # Load the data
     if TRAIN:
         DATA = load_data()
-        intersections, test_data = generate_intersections(data)
+        intersections, test_data = generate_intersections(DATA)
         test_data.to_csv("data/test-data.csv", index=False)
         intersections.to_csv("data/train-data.csv", index=False)
         # Train models
 
     if not os.path.isfile(test_file) and os.path.isfile(train_file):
         DATA = load_data()
-        DATA, TEST_DATA = generate_intersections(data)
+        DATA, TEST_DATA = generate_intersections(DATA)
         TEST_DATA.to_csv(test_file, index=False)
 
     if os.path.isfile(f"model/{model_name}.h5"):
