@@ -872,11 +872,6 @@ def calc_routes(time, start_id, dest_id):
 
 if __name__ == "__main__":
 
-    train("relu")
-    input("\nPress Enter to continue...")
-    test("relu")
-    input("\nPress Enter to continue...")
-
     # Get input arguments
     start_id = int(sys.argv[1])
     dest_id = int(sys.argv[2])
