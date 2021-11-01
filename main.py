@@ -404,15 +404,11 @@ def get_model(name):
     """
 
     if name == "saes":
-        return get_saes([lag + 1, 400, 400, 400, 1])
+        return get_saes([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
     if name == "lstm":
         return get_lstm([lag + 1, 64, 64, 1])
-    if name == "relu1":
-        return get_relu1([lag + 1, 100, 50, 75, 100, 1], name)
-    if name == "relu2":
-        return get_relu1([lag + 1, 400, 400, 400, 400, 1], name)
-    if name == "saes2":
-        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
+    if name == "relu":
+        return get_relu([lag + 1, 100, 50, 75, 100, 1], name)
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -432,9 +428,9 @@ def get_gru(layers):
     return model, train_model, "gru"
 
 
-def get_relu1(layers, name):
+def get_relu(layers, name):
     """
-    Get the GRU model with the given layers.
+    Get the ReLU model with the given layers.
     """
 
     model = Sequential([
@@ -448,9 +444,9 @@ def get_relu1(layers, name):
     return model, train_model, name
 
 
-def get_saes2(layers):
+def get_saes(layers):
     """
-    Get the GRU model with the given layers.
+    Get the SAES model with the given layers.
     """
 
     model = Sequential([
@@ -835,33 +831,25 @@ def calc_routes(time, start_id, dest_id):
 
 if __name__ == "__main__":
     # Get input arguments
-    # start_id = int(sys.argv[1])
-    # dest_id = int(sys.argv[2])
-    # start_time_minutes = military_to_minutes(sys.argv[3])
-    # model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+    start_id = int(sys.argv[1])
+    dest_id = int(sys.argv[2])
+    start_time_minutes = military_to_minutes(sys.argv[3])
+    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
-    train("relu1")
+    train("relu")
 
-    test("relu1")
-    # test("relu2")
-    # test("saes2")
+    test("relu")
+    # test("saes")
     # test("lstm")
     # test("gru")
     input("\nPress Enter to continue...")
 
-    # Hard coded args. Comment out after testing.
-    start_id = 200
-    dest_id = 2827
-    start_time_minutes = military_to_minutes("1436")
-    model_name = "relu1"
-
     # Load the data
-    # if False:
-    #     DATA = load_data()
-    #     intersections, test_data = generate_intersections(DATA)
-    #     test_data.to_csv("data/test-data.csv", index=False)
-    #     intersections.to_csv("data/train-data.csv", index=False)
-    #     # Train models
+    if False:
+        DATA = load_data()
+        intersections, test_data = generate_intersections(DATA)
+        test_data.to_csv("data/test-data.csv", index=False)
+        intersections.to_csv("data/train-data.csv", index=False)
 
     if not os.path.isfile(test_file) or not os.path.isfile(train_file):
         DATA = load_data()
