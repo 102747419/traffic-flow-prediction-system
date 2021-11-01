@@ -9,9 +9,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import sklearn.metrics as metrics
-from keras.engine.training import Model
 from keras.layers import Dense, Dropout
-from keras.layers.core import Activation
 from keras.layers.recurrent import GRU, LSTM
 from keras.models import Sequential
 from keras.saving import save
