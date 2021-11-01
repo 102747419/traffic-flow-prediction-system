@@ -900,58 +900,75 @@ def init(model_name):
 
 
 def show_gui():
+    # Declare canvas dimensions
+    width = 400
+    height = 300
+
+    # Create a window and canvas
     window = tk.Tk()
+    window.title("Traffic Flow Prediction System")
+    canvas = tk.Canvas(window, width=width, height=height)
 
-    # define widgets
-    canvas = tk.Canvas(window, width=600, height=500)
-    canvas.pack()
-
+    # Get SCATS numbers
     unique_sites = intersections.drop_duplicates("SCATS Number")
-    INTERSECTIONS = unique_sites["SCATS Number"].values
+    scats_numbers = unique_sites["SCATS Number"].values
 
-    HOURS = []
-    for i in range(0, 24):
-        HOURS.append(i)
+    # Generate values for dropdown menus
+    hours_values = [x for x in range(24)]
+    mins_values = [0, 15, 30, 45]
 
-    MINUTES = [0, 15, 30, 45]
-
+    # Create time dropdown menus
     hours = tk.IntVar(window)
-    hours.set(HOURS[0])  # default value
+    hours.set(hours_values[0])
     minutes = tk.IntVar(window)
-    minutes.set(MINUTES[0])  # default value
+    minutes.set(mins_values[0])
+
+    # Create start and destination dropdown menus
     start = tk.StringVar(window)
-    start.set(INTERSECTIONS[0])  # default value
-    end = tk.StringVar(window)
-    end.set(INTERSECTIONS[0])  # default value
+    start.set(scats_numbers[0])
+    dest = tk.StringVar(window)
+    dest.set(scats_numbers[0])
 
-    # right_offset, Start, length, end
-    # canvas.create_line(0, 100, 600, 100)
+    # Create labels
+    lbl_heading = tk.Label(window, text="Traffic Flow Prediction System")
+    lbl_heading.config(font=("helvetica", 20))
+    lbl_time = tk.Label(window, text="Departure Time ", anchor="e", width=50)
+    lbl_start = tk.Label(window, text="Starting SCATS site ", anchor="e", width=50)
+    lbl_end = tk.Label(window, text="Destination SCATS site ", anchor="e", width=50)
 
-    lbl_heading = tk.Label(window, text='Traffic Flow Prediction')
-    lbl_heading.config(font=('helvetica', 20))
-    lbl_time = tk.Label(window, text='Departure Time: ')
-    # txt_time = tk.Entry(window)
-    drp_hour = tk.OptionMenu(window, hours, *HOURS)
-    drp_minute = tk.OptionMenu(window, minutes, *MINUTES)
-    lbl_start = tk.Label(window, text='Starting Location: ')
-    drp_start = tk.OptionMenu(window, start, *INTERSECTIONS)
-    lbl_end = tk.Label(window, text='Destination: ')
-    drp_end = tk.OptionMenu(window, end, *INTERSECTIONS)
-    btn_exit = tk.Button(window, text='exit', command=window.destroy)
-    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_routes(int(start.get()), int(end.get()), int(hours.get() * 60 + minutes.get())))
+    # Create dropdown menus
+    drp_hour = tk.OptionMenu(window, hours, *hours_values)
+    drp_minute = tk.OptionMenu(window, minutes, *mins_values)
+    drp_start = tk.OptionMenu(window, start, *scats_numbers)
+    drp_end = tk.OptionMenu(window, dest, *scats_numbers)
 
-    # render widgets
-    canvas.create_window(300, 20, window=lbl_heading)
-    canvas.create_window(150, 60, window=lbl_time)
-    # canvas.create_window(450, 60, window=txt_time)
-    canvas.create_window(400, 60, window=drp_hour)
-    canvas.create_window(490, 60, window=drp_minute)
-    canvas.create_window(150, 100, window=lbl_start)
-    canvas.create_window(450, 100, window=drp_start)
-    canvas.create_window(150, 140, window=lbl_end)
-    canvas.create_window(450, 140, window=drp_end)
-    canvas.create_window(150, 200, window=btn_exit)
-    canvas.create_window(450, 200, window=btn_calculate)
+    # Configure dropdown menus
+    drp_hour.config(width=3)
+    drp_minute.config(width=3)
+    drp_start.config(width=3)
+    drp_end.config(width=3)
+
+    # Create buttons
+    btn_exit = tk.Button(window, text="Exit", width=14, command=window.destroy)
+    btn_calculate = tk.Button(window, text="Calculate Routes", width=14, command=lambda: calc_routes(int(start.get()), int(dest.get()), int(hours.get() * 60 + minutes.get())))
+
+    # Attach labels to canvas
+    canvas.create_window(width / 2, 40, window=lbl_heading)
+    canvas.create_window(20, 105, window=lbl_time)
+    canvas.create_window(20, 145, window=lbl_start)
+    canvas.create_window(20, 185, window=lbl_end)
+
+    # Attach dropdown menus to canvas
+    canvas.create_window(width / 2 + 40, 105, window=drp_hour)
+    canvas.create_window(width / 2 + 105, 105, window=drp_minute)
+    canvas.create_window(width / 2 + 40, 145, window=drp_start)
+    canvas.create_window(width / 2 + 40, 185, window=drp_end)
+
+    # Attach buttons to canvas
+    canvas.create_window(width / 2 - 60, 260, window=btn_calculate)
+    canvas.create_window(width / 2 + 60, 260, window=btn_exit)
+
+    canvas.pack()
     window.mainloop()
 
 
