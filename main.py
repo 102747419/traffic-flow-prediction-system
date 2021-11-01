@@ -1,7 +1,6 @@
 import math
 import os
 import sys
-import tkinter as tk
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
