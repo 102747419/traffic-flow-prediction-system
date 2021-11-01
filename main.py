@@ -434,7 +434,7 @@ def get_relu(layers):
     """
 
     model = Sequential([
-        Dense(1, input_dim=layers[0]),
+        Dense(1, input_shape=(layers[0],)),
         Dense(layers[1], activation='relu'),
         Dense(layers[2], activation='relu'),
         Dense(layers[3], activation='relu'),
@@ -830,6 +830,12 @@ def calc_routes(time, start_id, dest_id):
 
 
 if __name__ == "__main__":
+
+    train("relu")
+    input("\nPress Enter to continue...")
+    test("relu")
+    input("\nPress Enter to continue...")
+
     # Get input arguments
     start_id = int(sys.argv[1])
     dest_id = int(sys.argv[2])
