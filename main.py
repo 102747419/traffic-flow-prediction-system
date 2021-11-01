@@ -110,32 +110,32 @@ def generate_intersections(data):
     Generates a dataframe of intersections with the traffic volume data averaged for each day.
     """
 
-    test = pd.DataFrame(columns=['SCATS Number',
-                                 'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09',
-                                 'V10', 'V11', 'V12',
-                                 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22',
-                                 'V23', 'V24', 'V25',
-                                 'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35',
-                                 'V36', 'V37', 'V38',
-                                 'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48',
-                                 'V49', 'V50', 'V51',
-                                 'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61',
-                                 'V62', 'V63', 'V64',
-                                 'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74',
-                                 'V75', 'V76', 'V77',
-                                 'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87',
-                                 'V88', 'V89', 'V90',
-                                 'V91', 'V92', 'V93', 'V94', 'V95'])
+    test = pd.DataFrame(columns=["SCATS Number",
+                                 "V00", "V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09",
+                                 "V10", "V11", "V12",
+                                 "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22",
+                                 "V23", "V24", "V25",
+                                 "V26", "V27", "V28", "V29", "V30", "V31", "V32", "V33", "V34", "V35",
+                                 "V36", "V37", "V38",
+                                 "V39", "V40", "V41", "V42", "V43", "V44", "V45", "V46", "V47", "V48",
+                                 "V49", "V50", "V51",
+                                 "V52", "V53", "V54", "V55", "V56", "V57", "V58", "V59", "V60", "V61",
+                                 "V62", "V63", "V64",
+                                 "V65", "V66", "V67", "V68", "V69", "V70", "V71", "V72", "V73", "V74",
+                                 "V75", "V76", "V77",
+                                 "V78", "V79", "V80", "V81", "V82", "V83", "V84", "V85", "V86", "V87",
+                                 "V88", "V89", "V90",
+                                 "V91", "V92", "V93", "V94", "V95"])
 
-    train = pd.DataFrame(columns=['SCATS Number', 'NB_LATITUDE', 'NB_LONGITUDE', 'Date',
-                                  'V00', 'V01', 'V02', 'V03', 'V04', 'V05', 'V06', 'V07', 'V08', 'V09', 'V10', 'V11', 'V12',
-                                  'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25',
-                                  'V26', 'V27', 'V28', 'V29', 'V30', 'V31', 'V32', 'V33', 'V34', 'V35', 'V36', 'V37', 'V38',
-                                  'V39', 'V40', 'V41', 'V42', 'V43', 'V44', 'V45', 'V46', 'V47', 'V48', 'V49', 'V50', 'V51',
-                                  'V52', 'V53', 'V54', 'V55', 'V56', 'V57', 'V58', 'V59', 'V60', 'V61', 'V62', 'V63', 'V64',
-                                  'V65', 'V66', 'V67', 'V68', 'V69', 'V70', 'V71', 'V72', 'V73', 'V74', 'V75', 'V76', 'V77',
-                                  'V78', 'V79', 'V80', 'V81', 'V82', 'V83', 'V84', 'V85', 'V86', 'V87', 'V88', 'V89', 'V90',
-                                  'V91', 'V92', 'V93', 'V94', 'V95'])
+    train = pd.DataFrame(columns=["SCATS Number", "NB_LATITUDE", "NB_LONGITUDE", "Date",
+                                  "V00", "V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10", "V11", "V12",
+                                  "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22", "V23", "V24", "V25",
+                                  "V26", "V27", "V28", "V29", "V30", "V31", "V32", "V33", "V34", "V35", "V36", "V37", "V38",
+                                  "V39", "V40", "V41", "V42", "V43", "V44", "V45", "V46", "V47", "V48", "V49", "V50", "V51",
+                                  "V52", "V53", "V54", "V55", "V56", "V57", "V58", "V59", "V60", "V61", "V62", "V63", "V64",
+                                  "V65", "V66", "V67", "V68", "V69", "V70", "V71", "V72", "V73", "V74", "V75", "V76", "V77",
+                                  "V78", "V79", "V80", "V81", "V82", "V83", "V84", "V85", "V86", "V87", "V88", "V89", "V90",
+                                  "V91", "V92", "V93", "V94", "V95"])
 
     connection_arrays = [[[0 for volume in range(96)] for day in range(31)] for sensor in range(10)]
 
@@ -163,84 +163,84 @@ def generate_intersections(data):
                 # Read into DataFrame
                 date = f"10/{(d+1)}/2016"
                 if d+1 == 3:
-                    new_row = {'SCATS Number': prev_site,
-                               'V00': temp_list[d][0], 'V01': temp_list[d][1], 'V02': temp_list[d][2],
-                               'V03': temp_list[d][3], 'V04': temp_list[d][4], 'V05': temp_list[d][5],
-                               'V06': temp_list[d][6], 'V07': temp_list[d][7], 'V08': temp_list[d][8],
-                               'V09': temp_list[d][9], 'V10': temp_list[d][10], 'V11': temp_list[d][11],
-                               'V12': temp_list[d][12],
-                               'V13': temp_list[d][13], 'V14': temp_list[d][14], 'V15': temp_list[d][15],
-                               'V16': temp_list[d][16], 'V17': temp_list[d][17], 'V18': temp_list[d][18],
-                               'V19': temp_list[d][19], 'V20': temp_list[d][20], 'V21': temp_list[d][21],
-                               'V22': temp_list[d][22], 'V23': temp_list[d][23], 'V24': temp_list[d][24],
-                               'V25': temp_list[d][25],
-                               'V26': temp_list[d][26], 'V27': temp_list[d][27], 'V28': temp_list[d][28],
-                               'V29': temp_list[d][29], 'V30': temp_list[d][30], 'V31': temp_list[d][31],
-                               'V32': temp_list[d][32], 'V33': temp_list[d][33], 'V34': temp_list[d][34],
-                               'V35': temp_list[d][35], 'V36': temp_list[d][36], 'V37': temp_list[d][37],
-                               'V38': temp_list[d][38],
-                               'V39': temp_list[d][39], 'V40': temp_list[d][40], 'V41': temp_list[d][41],
-                               'V42': temp_list[d][42], 'V43': temp_list[d][43], 'V44': temp_list[d][44],
-                               'V45': temp_list[d][45], 'V46': temp_list[d][46], 'V47': temp_list[d][47],
-                               'V48': temp_list[d][48], 'V49': temp_list[d][49], 'V50': temp_list[d][50],
-                               'V51': temp_list[d][51],
-                               'V52': temp_list[d][52], 'V53': temp_list[d][53], 'V54': temp_list[d][54],
-                               'V55': temp_list[d][55], 'V56': temp_list[d][56], 'V57': temp_list[d][57],
-                               'V58': temp_list[d][58], 'V59': temp_list[d][59], 'V60': temp_list[d][60],
-                               'V61': temp_list[d][61], 'V62': temp_list[d][62], 'V63': temp_list[d][63],
-                               'V64': temp_list[d][64],
-                               'V65': temp_list[d][65], 'V66': temp_list[d][66], 'V67': temp_list[d][67],
-                               'V68': temp_list[d][68], 'V69': temp_list[d][69], 'V70': temp_list[d][70],
-                               'V71': temp_list[d][71], 'V72': temp_list[d][72], 'V73': temp_list[d][73],
-                               'V74': temp_list[d][74], 'V75': temp_list[d][75], 'V76': temp_list[d][76],
-                               'V77': temp_list[d][77],
-                               'V78': temp_list[d][78], 'V79': temp_list[d][79], 'V80': temp_list[d][80],
-                               'V81': temp_list[d][81], 'V82': temp_list[d][82], 'V83': temp_list[d][83],
-                               'V84': temp_list[d][84], 'V85': temp_list[d][85], 'V86': temp_list[d][86],
-                               'V87': temp_list[d][87], 'V88': temp_list[d][88], 'V89': temp_list[d][89],
-                               'V90': temp_list[d][90],
-                               'V91': temp_list[d][91], 'V92': temp_list[d][92], 'V93': temp_list[d][93],
-                               'V94': temp_list[d][94], 'V95': temp_list[d][95]}
+                    new_row = {"SCATS Number": prev_site,
+                               "V00": temp_list[d][0], "V01": temp_list[d][1], "V02": temp_list[d][2],
+                               "V03": temp_list[d][3], "V04": temp_list[d][4], "V05": temp_list[d][5],
+                               "V06": temp_list[d][6], "V07": temp_list[d][7], "V08": temp_list[d][8],
+                               "V09": temp_list[d][9], "V10": temp_list[d][10], "V11": temp_list[d][11],
+                               "V12": temp_list[d][12],
+                               "V13": temp_list[d][13], "V14": temp_list[d][14], "V15": temp_list[d][15],
+                               "V16": temp_list[d][16], "V17": temp_list[d][17], "V18": temp_list[d][18],
+                               "V19": temp_list[d][19], "V20": temp_list[d][20], "V21": temp_list[d][21],
+                               "V22": temp_list[d][22], "V23": temp_list[d][23], "V24": temp_list[d][24],
+                               "V25": temp_list[d][25],
+                               "V26": temp_list[d][26], "V27": temp_list[d][27], "V28": temp_list[d][28],
+                               "V29": temp_list[d][29], "V30": temp_list[d][30], "V31": temp_list[d][31],
+                               "V32": temp_list[d][32], "V33": temp_list[d][33], "V34": temp_list[d][34],
+                               "V35": temp_list[d][35], "V36": temp_list[d][36], "V37": temp_list[d][37],
+                               "V38": temp_list[d][38],
+                               "V39": temp_list[d][39], "V40": temp_list[d][40], "V41": temp_list[d][41],
+                               "V42": temp_list[d][42], "V43": temp_list[d][43], "V44": temp_list[d][44],
+                               "V45": temp_list[d][45], "V46": temp_list[d][46], "V47": temp_list[d][47],
+                               "V48": temp_list[d][48], "V49": temp_list[d][49], "V50": temp_list[d][50],
+                               "V51": temp_list[d][51],
+                               "V52": temp_list[d][52], "V53": temp_list[d][53], "V54": temp_list[d][54],
+                               "V55": temp_list[d][55], "V56": temp_list[d][56], "V57": temp_list[d][57],
+                               "V58": temp_list[d][58], "V59": temp_list[d][59], "V60": temp_list[d][60],
+                               "V61": temp_list[d][61], "V62": temp_list[d][62], "V63": temp_list[d][63],
+                               "V64": temp_list[d][64],
+                               "V65": temp_list[d][65], "V66": temp_list[d][66], "V67": temp_list[d][67],
+                               "V68": temp_list[d][68], "V69": temp_list[d][69], "V70": temp_list[d][70],
+                               "V71": temp_list[d][71], "V72": temp_list[d][72], "V73": temp_list[d][73],
+                               "V74": temp_list[d][74], "V75": temp_list[d][75], "V76": temp_list[d][76],
+                               "V77": temp_list[d][77],
+                               "V78": temp_list[d][78], "V79": temp_list[d][79], "V80": temp_list[d][80],
+                               "V81": temp_list[d][81], "V82": temp_list[d][82], "V83": temp_list[d][83],
+                               "V84": temp_list[d][84], "V85": temp_list[d][85], "V86": temp_list[d][86],
+                               "V87": temp_list[d][87], "V88": temp_list[d][88], "V89": temp_list[d][89],
+                               "V90": temp_list[d][90],
+                               "V91": temp_list[d][91], "V92": temp_list[d][92], "V93": temp_list[d][93],
+                               "V94": temp_list[d][94], "V95": temp_list[d][95]}
                     test = test.append(new_row, ignore_index=True)
                 else:
-                    new_row = {'SCATS Number': prev_site, 'NB_LATITUDE': lat, 'NB_LONGITUDE': long, 'Date': date,
-                               'V00': temp_list[d][0], 'V01': temp_list[d][1], 'V02': temp_list[d][2],
-                               'V03': temp_list[d][3], 'V04': temp_list[d][4], 'V05': temp_list[d][5],
-                               'V06': temp_list[d][6], 'V07': temp_list[d][7], 'V08': temp_list[d][8],
-                               'V09': temp_list[d][9], 'V10': temp_list[d][10], 'V11': temp_list[d][11],
-                               'V12': temp_list[d][12],
-                               'V13': temp_list[d][13], 'V14': temp_list[d][14], 'V15': temp_list[d][15],
-                               'V16': temp_list[d][16], 'V17': temp_list[d][17], 'V18': temp_list[d][18],
-                               'V19': temp_list[d][19], 'V20': temp_list[d][20], 'V21': temp_list[d][21],
-                               'V22': temp_list[d][22], 'V23': temp_list[d][23], 'V24': temp_list[d][24],
-                               'V25': temp_list[d][25],
-                               'V26': temp_list[d][26], 'V27': temp_list[d][27], 'V28': temp_list[d][28],
-                               'V29': temp_list[d][29], 'V30': temp_list[d][30], 'V31': temp_list[d][31],
-                               'V32': temp_list[d][32], 'V33': temp_list[d][33], 'V34': temp_list[d][34],
-                               'V35': temp_list[d][35], 'V36': temp_list[d][36], 'V37': temp_list[d][37],
-                               'V38': temp_list[d][38],
-                               'V39': temp_list[d][39], 'V40': temp_list[d][40], 'V41': temp_list[d][41],
-                               'V42': temp_list[d][42], 'V43': temp_list[d][43], 'V44': temp_list[d][44],
-                               'V45': temp_list[d][45], 'V46': temp_list[d][46], 'V47': temp_list[d][47],
-                               'V48': temp_list[d][48], 'V49': temp_list[d][49], 'V50': temp_list[d][50],
-                               'V51': temp_list[d][51],
-                               'V52': temp_list[d][52], 'V53': temp_list[d][53], 'V54': temp_list[d][54],
-                               'V55': temp_list[d][55], 'V56': temp_list[d][56], 'V57': temp_list[d][57],
-                               'V58': temp_list[d][58], 'V59': temp_list[d][59], 'V60': temp_list[d][60],
-                               'V61': temp_list[d][61], 'V62': temp_list[d][62], 'V63': temp_list[d][63],
-                               'V64': temp_list[d][64],
-                               'V65': temp_list[d][65], 'V66': temp_list[d][66], 'V67': temp_list[d][67],
-                               'V68': temp_list[d][68], 'V69': temp_list[d][69], 'V70': temp_list[d][70],
-                               'V71': temp_list[d][71], 'V72': temp_list[d][72], 'V73': temp_list[d][73],
-                               'V74': temp_list[d][74], 'V75': temp_list[d][75], 'V76': temp_list[d][76],
-                               'V77': temp_list[d][77],
-                               'V78': temp_list[d][78], 'V79': temp_list[d][79], 'V80': temp_list[d][80],
-                               'V81': temp_list[d][81], 'V82': temp_list[d][82], 'V83': temp_list[d][83],
-                               'V84': temp_list[d][84], 'V85': temp_list[d][85], 'V86': temp_list[d][86],
-                               'V87': temp_list[d][87], 'V88': temp_list[d][88], 'V89': temp_list[d][89],
-                               'V90': temp_list[d][90],
-                               'V91': temp_list[d][91], 'V92': temp_list[d][92], 'V93': temp_list[d][93],
-                               'V94': temp_list[d][94], 'V95': temp_list[d][95]}
+                    new_row = {"SCATS Number": prev_site, "NB_LATITUDE": lat, "NB_LONGITUDE": long, "Date": date,
+                               "V00": temp_list[d][0], "V01": temp_list[d][1], "V02": temp_list[d][2],
+                               "V03": temp_list[d][3], "V04": temp_list[d][4], "V05": temp_list[d][5],
+                               "V06": temp_list[d][6], "V07": temp_list[d][7], "V08": temp_list[d][8],
+                               "V09": temp_list[d][9], "V10": temp_list[d][10], "V11": temp_list[d][11],
+                               "V12": temp_list[d][12],
+                               "V13": temp_list[d][13], "V14": temp_list[d][14], "V15": temp_list[d][15],
+                               "V16": temp_list[d][16], "V17": temp_list[d][17], "V18": temp_list[d][18],
+                               "V19": temp_list[d][19], "V20": temp_list[d][20], "V21": temp_list[d][21],
+                               "V22": temp_list[d][22], "V23": temp_list[d][23], "V24": temp_list[d][24],
+                               "V25": temp_list[d][25],
+                               "V26": temp_list[d][26], "V27": temp_list[d][27], "V28": temp_list[d][28],
+                               "V29": temp_list[d][29], "V30": temp_list[d][30], "V31": temp_list[d][31],
+                               "V32": temp_list[d][32], "V33": temp_list[d][33], "V34": temp_list[d][34],
+                               "V35": temp_list[d][35], "V36": temp_list[d][36], "V37": temp_list[d][37],
+                               "V38": temp_list[d][38],
+                               "V39": temp_list[d][39], "V40": temp_list[d][40], "V41": temp_list[d][41],
+                               "V42": temp_list[d][42], "V43": temp_list[d][43], "V44": temp_list[d][44],
+                               "V45": temp_list[d][45], "V46": temp_list[d][46], "V47": temp_list[d][47],
+                               "V48": temp_list[d][48], "V49": temp_list[d][49], "V50": temp_list[d][50],
+                               "V51": temp_list[d][51],
+                               "V52": temp_list[d][52], "V53": temp_list[d][53], "V54": temp_list[d][54],
+                               "V55": temp_list[d][55], "V56": temp_list[d][56], "V57": temp_list[d][57],
+                               "V58": temp_list[d][58], "V59": temp_list[d][59], "V60": temp_list[d][60],
+                               "V61": temp_list[d][61], "V62": temp_list[d][62], "V63": temp_list[d][63],
+                               "V64": temp_list[d][64],
+                               "V65": temp_list[d][65], "V66": temp_list[d][66], "V67": temp_list[d][67],
+                               "V68": temp_list[d][68], "V69": temp_list[d][69], "V70": temp_list[d][70],
+                               "V71": temp_list[d][71], "V72": temp_list[d][72], "V73": temp_list[d][73],
+                               "V74": temp_list[d][74], "V75": temp_list[d][75], "V76": temp_list[d][76],
+                               "V77": temp_list[d][77],
+                               "V78": temp_list[d][78], "V79": temp_list[d][79], "V80": temp_list[d][80],
+                               "V81": temp_list[d][81], "V82": temp_list[d][82], "V83": temp_list[d][83],
+                               "V84": temp_list[d][84], "V85": temp_list[d][85], "V86": temp_list[d][86],
+                               "V87": temp_list[d][87], "V88": temp_list[d][88], "V89": temp_list[d][89],
+                               "V90": temp_list[d][90],
+                               "V91": temp_list[d][91], "V92": temp_list[d][92], "V93": temp_list[d][93],
+                               "V94": temp_list[d][94], "V95": temp_list[d][95]}
                     train = train.append(new_row, ignore_index=True)
             prev_site = site
             arr_index = 0
@@ -269,8 +269,8 @@ def process_data(train_path, test_path, lags):
 
     print("Begin processing data...")
 
-    train_df = pd.read_csv(train_path, encoding='utf-8').fillna(0)
-    test_df = pd.read_csv(test_path, encoding='utf-8').fillna(0)
+    train_df = pd.read_csv(train_path, encoding="utf-8").fillna(0)
+    test_df = pd.read_csv(test_path, encoding="utf-8").fillna(0)
 
     flattened_data = train_df.iloc[:, 4:].to_numpy().flatten().reshape(-1, 1)
     scaler = MinMaxScaler((0, 1)).fit(flattened_data)
@@ -438,10 +438,10 @@ def get_relu(layers, name):
 
     model = Sequential([
         Dense(1, input_shape=(layers[0],)),
-        Dense(layers[1], activation='relu'),
-        Dense(layers[2], activation='relu'),
-        Dense(layers[3], activation='relu'),
-        Dense(layers[4], activation='relu'),
+        Dense(layers[1], activation="relu"),
+        Dense(layers[2], activation="relu"),
+        Dense(layers[3], activation="relu"),
+        Dense(layers[4], activation="relu"),
         Dense(layers[5])])
 
     return model, train_model, name
@@ -492,12 +492,12 @@ def get_saes2(layers):
 
     model = Sequential([
         Dense(1, input_dim=layers[0]),
-        Dense(layers[1], activation='relu'),
-        Dense(layers[2], activation='relu'),
-        Dense(layers[3], activation='relu'),
-        Dense(layers[4], activation='relu'),
-        Dense(layers[5], activation='relu'),
-        Dense(layers[6], activation='relu'),
+        Dense(layers[1], activation="relu"),
+        Dense(layers[2], activation="relu"),
+        Dense(layers[3], activation="relu"),
+        Dense(layers[4], activation="relu"),
+        Dense(layers[5], activation="relu"),
+        Dense(layers[6], activation="relu"),
         Dense(layers[7])])
 
     return model, train_model, "saes2"
@@ -870,13 +870,8 @@ def calc_routes(time, start_id, dest_id):
     show_routes_on_map(routes)
 
 
-if __name__ == "__main__":
-
-    # Get input arguments
-    start_id = int(sys.argv[1])
-    dest_id = int(sys.argv[2])
-    start_time_minutes = military_to_minutes(sys.argv[3])
-    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+def init(model_name):
+    REGRESSION = None
 
     if not os.path.isfile(test_file) or not os.path.isfile(train_file):
         DATA = load_data()
@@ -887,7 +882,7 @@ if __name__ == "__main__":
 
     if os.path.isfile(f"model/{model_name}.h5"):
         MODEL = save.load_model(f"model/{model_name}.h5")
-        train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
+        _, _, test_x, _, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
         if model_name in shaped_models:
             X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
         else:
@@ -898,6 +893,19 @@ if __name__ == "__main__":
         print("Please train the model.")
         sys.exit()
 
-    intersections = pd.read_csv("data/train-data.csv")
+    return REGRESSION, pd.read_csv(train_file)
 
+
+if __name__ == "__main__":
+
+    # Get input arguments
+    start_id = int(sys.argv[1])
+    dest_id = int(sys.argv[2])
+    start_time_minutes = military_to_minutes(sys.argv[3])
+    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+
+    # Initialise
+    REGRESSION, intersections = init(model_name)
+
+    # Calculate best routes
     calc_routes(start_time_minutes, start_id, dest_id)
