@@ -959,21 +959,6 @@ def show_gui():
 
 
 if __name__ == "__main__":
-    # MODEL TEST - TEMP
-    train("gru2")
-    # input("\nPress Enter to continue...")
-    test("gru2")
-    input("\nPress Enter to continue...")
-    # train("relu")
-    # train("thick")
-    # train("saes")
-    # input("\nPress Enter to continue...")
-    # test("relu")
-    # test("thick")
-    # test("saes")
-    # input("\nPress Enter to continue...")
-
-
     if False:
         ###### Command-line implementation ######
 
