@@ -417,7 +417,7 @@ def get_relu(layers, name):
 
 def get_saes(layers):
     """
-    Get the second version SAES model with the given layers.
+    Get the SAES model with the given layers.
     """
 
     model = Sequential([
@@ -800,6 +800,10 @@ def show_routes_on_map(routes, start_time_minutes):
 
 
 def calc_routes(start_id, dest_id, start_time_minutes):
+    """
+    Calculate the routes from a start and destination intersection at a given time.
+    """
+
     if start_id == dest_id:
         print("Please specify different start and destination locations.")
         return
@@ -818,6 +822,10 @@ def calc_routes(start_id, dest_id, start_time_minutes):
 
 
 def init(model_name):
+    """
+    Initialise stuff.
+    """
+
     REGRESSION = None
 
     if not os.path.isfile(test_file) or not os.path.isfile(train_file):
@@ -844,6 +852,10 @@ def init(model_name):
 
 
 def show_gui():
+    """
+    Show the GUI.
+    """
+
     # Declare canvas dimensions
     width = 400
     height = 300
