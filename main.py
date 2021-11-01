@@ -904,9 +904,13 @@ def show_gui():
 if __name__ == "__main__":
     # MODEL TEST - TEMP
     train("relu")
-    input("Press enter to continue")
+    train("thick")
+    train("saes")
+    input("\nPress Enter to continue...")
     test("relu")
-    input("Press enter to continue")
+    test("thick")
+    test("saes")
+    input("\nPress Enter to continue...")
 
 
     if False:
