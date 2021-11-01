@@ -21,7 +21,7 @@ import astar
 lag = 8
 train_file = "data/train-data.csv"
 test_file = "data/test-data.csv"
-shaped_models = ["lstm", "gru", "relu"]
+shaped_models = ["lstm", "gru"]
 config = {"batch": 40, "epochs": 4}
 
 graph = {
@@ -408,7 +408,7 @@ def get_model(name):
     if name == "lstm":
         return get_lstm([lag + 1, 64, 64, 1])
     if name == "relu":
-        return get_relu([lag + 1, 64, 64, 1])
+        return get_relu([lag + 1, 100, 50, 75, 100, 1])
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -433,19 +433,13 @@ def get_relu(layers):
     Get the ReLU model with the given layers.
     """
 
-    # model = Sequential([
-    #     Dense(1, input_dim=layers[0]),
-    #     Dense(layers[1], activation='relu'),
-    #     Dense(layers[2], activation='relu'),
-    #     Dense(layers[3], activation='relu'),
-    #     Dense(layers[4], activation='relu'),
-    #     Dense(layers[5])])
-
-    model = Sequential()
-    model.add(GRU(layers[1], input_shape=(layers[0], 1), return_sequences=True))
-    model.add(GRU(layers[2]))
-    model.add(Dropout(0.2))
-    model.add(Dense(layers[3], activation="sigmoid"))
+    model = Sequential([
+        Dense(1, input_dim=layers[0]),
+        Dense(layers[1], activation='relu'),
+        Dense(layers[2], activation='relu'),
+        Dense(layers[3], activation='relu'),
+        Dense(layers[4], activation='relu'),
+        Dense(layers[5])])
 
     return model, train_model, "relu"
 
