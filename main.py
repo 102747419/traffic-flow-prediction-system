@@ -878,13 +878,6 @@ if __name__ == "__main__":
     start_time_minutes = military_to_minutes(sys.argv[3])
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
-    # Load the data
-    if False:
-        DATA = load_data()
-        intersections, test_data = generate_intersections(DATA)
-        test_data.to_csv("data/test-data.csv", index=False)
-        intersections.to_csv("data/train-data.csv", index=False)
-
     if not os.path.isfile(test_file) or not os.path.isfile(train_file):
         DATA = load_data()
         DATA, TEST_DATA = generate_intersections(DATA)
