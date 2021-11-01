@@ -367,52 +367,19 @@ def train_model(model, X_train, y_train, name, config):
     df.to_csv("model/" + name + " loss.csv", encoding="utf-8", index=False)
 
 
-def train_saes(models, X_train, y_train, name, config):
-    """
-    Train the SAES model.
-    """
-
-    temp = X_train
-
-    for i in range(len(models) - 1):
-        if i > 0:
-            p = models[i - 1]
-            hidden_layer_model = Model(p.input,
-                                       p.get_layer("hidden").output)
-            temp = hidden_layer_model.predict(temp)
-
-        m = models[i]
-        m.compile(loss="mse", optimizer="rmsprop", metrics=["mape"])
-
-        m.fit(temp, y_train, batch_size=config["batch"],
-              epochs=config["epochs"],
-              validation_split=0.05)
-
-        models[i] = m
-
-    saes = models[-1]
-    for i in range(len(models) - 1):
-        weights = models[i].get_layer("hidden").get_weights()
-        saes.get_layer(f"hidden{i + 1}").set_weights(weights)
-
-    train_model(saes, X_train, y_train, name, config)
-
-
 def get_model(name):
     """
     Get the model by its name.
     """
 
-    if name == "saes":
-        return get_saes([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
-    if name == "saes2":
-        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
     if name == "lstm":
         return get_lstm([lag + 1, 64, 64, 1])
     if name == "relu":
         return get_relu([lag + 1, 100, 50, 75, 100, 1], name)
-    if name == "relu2":
+    if name == "thick":
         return get_relu([lag + 1, 400, 400, 400, 400, 1], name)
+    if name == "saes":
+        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -448,51 +415,13 @@ def get_relu(layers, name):
     return model, train_model, name
 
 
-def get_sae(inputs, hidden, output):
-    """
-    Get the SAE model with the given layers.
-    """
-
-    model = Sequential()
-    model.add(Dense(hidden, input_dim=inputs, name="hidden"))
-    model.add(Activation("sigmoid"))
-    model.add(Dropout(0.2))
-    model.add(Dense(output, activation="sigmoid"))
-
-    return model, train_saes, "sae"
-
-
 def get_saes(layers):
-    """
-    Get the SAES model with the given layers.
-    """
-
-    sae1 = get_sae(layers[0], layers[1], layers[-1])
-    sae2 = get_sae(layers[1], layers[2], layers[-1])
-    sae3 = get_sae(layers[2], layers[3], layers[-1])
-
-    saes = Sequential()
-    saes.add(Dense(layers[1], input_dim=layers[0], name="hidden1"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dense(layers[2], name="hidden2"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dense(layers[3], name="hidden3"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dropout(0.2))
-    saes.add(Dense(layers[4], activation="sigmoid"))
-
-    models = [sae1, sae2, sae3, saes]
-
-    return models, train_saes, "saes"
-
-
-def get_saes2(layers):
     """
     Get the second version SAES model with the given layers.
     """
 
     model = Sequential([
-        Dense(1, input_dim=layers[0]),
+        Dense(1, input_shape=(layers[0],)),
         Dense(layers[1], activation="relu"),
         Dense(layers[2], activation="relu"),
         Dense(layers[3], activation="relu"),
@@ -973,6 +902,13 @@ def show_gui():
 
 
 if __name__ == "__main__":
+    # MODEL TEST - TEMP
+    train("relu")
+    input("Press enter to continue")
+    test("relu")
+    input("Press enter to continue")
+
+
     if False:
         ###### Command-line implementation ######
 
