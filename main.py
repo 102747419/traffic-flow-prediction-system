@@ -404,10 +404,14 @@ def get_model(name):
 
     if name == "saes":
         return get_saes([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
+    if name == "saes2":
+        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
     if name == "lstm":
         return get_lstm([lag + 1, 64, 64, 1])
     if name == "relu":
-        return get_relu([lag + 1, 100, 50, 75, 100, 1])
+        return get_relu([lag + 1, 100, 50, 75, 100, 1], name)
+    if name == "relu2":
+        return get_relu([lag + 1, 400, 400, 400, 400, 1], name)
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -427,7 +431,7 @@ def get_gru(layers):
     return model, train_model, "gru"
 
 
-def get_relu(layers):
+def get_relu(layers, name):
     """
     Get the ReLU model with the given layers.
     """
@@ -440,12 +444,50 @@ def get_relu(layers):
         Dense(layers[4], activation='relu'),
         Dense(layers[5])])
 
-    return model, train_model, "relu"
+    return model, train_model, name
+
+
+def get_sae(inputs, hidden, output):
+    """
+    Get the SAE model with the given layers.
+    """
+
+    model = Sequential()
+    model.add(Dense(hidden, input_dim=inputs, name="hidden"))
+    model.add(Activation("sigmoid"))
+    model.add(Dropout(0.2))
+    model.add(Dense(output, activation="sigmoid"))
+
+    return model, train_saes, "sae"
 
 
 def get_saes(layers):
     """
     Get the SAES model with the given layers.
+    """
+
+    sae1 = get_sae(layers[0], layers[1], layers[-1])
+    sae2 = get_sae(layers[1], layers[2], layers[-1])
+    sae3 = get_sae(layers[2], layers[3], layers[-1])
+
+    saes = Sequential()
+    saes.add(Dense(layers[1], input_dim=layers[0], name="hidden1"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dense(layers[2], name="hidden2"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dense(layers[3], name="hidden3"))
+    saes.add(Activation("sigmoid"))
+    saes.add(Dropout(0.2))
+    saes.add(Dense(layers[4], activation="sigmoid"))
+
+    models = [sae1, sae2, sae3, saes]
+
+    return models, train_saes, "saes"
+
+
+def get_saes2(layers):
+    """
+    Get the second version SAES model with the given layers.
     """
 
     model = Sequential([
@@ -458,7 +500,7 @@ def get_saes(layers):
         Dense(layers[6], activation='relu'),
         Dense(layers[7])])
 
-    return model, train_model, "saes"
+    return model, train_model, "saes2"
 
 
 def get_lstm(units):
