@@ -21,6 +21,7 @@ import astar
 lag = 8
 train_file = "data/train-data.csv"
 test_file = "data/test-data.csv"
+shaped_models = ["lstm", "gru"]
 config = {"batch": 40, "epochs": 4}
 
 graph = {
@@ -339,10 +340,10 @@ def train(model_name):
 
     model, train_func, name = get_model(model_name)
 
-    if name == "saes":
-        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]))
-    else:
+    if model_name in shaped_models:
         X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
+    else:
+        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]))
 
     print(f"Training {name}...")
     train_func(model, X_train, y_train, name, config)
@@ -403,12 +404,18 @@ def get_model(name):
     """
 
     if name == "saes":
-        return get_saes([lag, 400, 400, 400, 1])
+        return get_saes([lag + 1, 400, 400, 400, 1])
     if name == "lstm":
-        return get_lstm([lag, 64, 64, 1])
+        return get_lstm([lag + 1, 64, 64, 1])
+    if name == "relu1":
+        return get_relu1([lag + 1, 100, 50, 75, 100, 1], name)
+    if name == "relu2":
+        return get_relu1([lag + 1, 400, 400, 400, 400, 1], name)
+    if name == "saes2":
+        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
 
     # Return gru by default
-    return get_gru([lag, 64, 64, 1])
+    return get_gru([lag + 1, 64, 64, 1])
 
 
 def get_gru(layers):
@@ -425,6 +432,40 @@ def get_gru(layers):
     return model, train_model, "gru"
 
 
+def get_relu1(layers, name):
+    """
+    Get the GRU model with the given layers.
+    """
+
+    model = Sequential([
+        Dense(1, input_dim=layers[0]),
+        Dense(layers[1], activation='relu'),
+        Dense(layers[2], activation='relu'),
+        Dense(layers[3], activation='relu'),
+        Dense(layers[4], activation='relu'),
+        Dense(layers[5])])
+
+    return model, train_model, name
+
+
+def get_saes2(layers):
+    """
+    Get the GRU model with the given layers.
+    """
+
+    model = Sequential([
+        Dense(1, input_dim=layers[0]),
+        Dense(layers[1], activation='relu'),
+        Dense(layers[2], activation='relu'),
+        Dense(layers[3], activation='relu'),
+        Dense(layers[4], activation='relu'),
+        Dense(layers[5], activation='relu'),
+        Dense(layers[6], activation='relu'),
+        Dense(layers[7])])
+
+    return model, train_model, "saes2"
+
+
 def get_lstm(units):
     """
     Get the LSTM model with the given layers.
@@ -437,44 +478,6 @@ def get_lstm(units):
     model.add(Dense(units[3], activation="sigmoid"))
 
     return model, train_model, "lstm"
-
-
-def get_sae(inputs, hidden, output):
-    """
-    Get the SAE model with the given layers.
-    """
-
-    model = Sequential()
-    model.add(Dense(hidden, input_dim=inputs, name="hidden"))
-    model.add(Activation("sigmoid"))
-    model.add(Dropout(0.2))
-    model.add(Dense(output, activation="sigmoid"))
-
-    return model, train_model, "sae"
-
-
-def get_saes(layers):
-    """
-    Get the SAES model with the given layers.
-    """
-
-    sae1 = get_sae(layers[0], layers[1], layers[-1])
-    sae2 = get_sae(layers[1], layers[2], layers[-1])
-    sae3 = get_sae(layers[2], layers[3], layers[-1])
-
-    saes = Sequential()
-    saes.add(Dense(layers[1], input_dim=layers[0], name="hidden1"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dense(layers[2], name="hidden2"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dense(layers[3], name="hidden3"))
-    saes.add(Activation("sigmoid"))
-    saes.add(Dropout(0.2))
-    saes.add(Dense(layers[4], activation="sigmoid"))
-
-    models = [sae1, sae2, sae3, saes]
-
-    return models, train_saes, "saes"
 
 
 def test(model_name):
@@ -492,7 +495,10 @@ def test(model_name):
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
 
     # Reshape the test data so it works with the model
-    X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+    if model_name == "gru" or model_name == "lstm":
+        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+    else:
+        X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1]))
 
     # Predict using the model
     predicted = model.predict(X_test)
@@ -829,18 +835,33 @@ def calc_routes(time, start_id, dest_id):
 
 if __name__ == "__main__":
     # Get input arguments
-    start_id = int(sys.argv[1])
-    dest_id = int(sys.argv[2])
-    start_time_minutes = military_to_minutes(sys.argv[3])
-    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+    # start_id = int(sys.argv[1])
+    # dest_id = int(sys.argv[2])
+    # start_time_minutes = military_to_minutes(sys.argv[3])
+    # model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+
+    train("relu1")
+
+    test("relu1")
+    # test("relu2")
+    # test("saes2")
+    # test("lstm")
+    # test("gru")
+    input("\nPress Enter to continue...")
+
+    # Hard coded args. Comment out after testing.
+    start_id = 200
+    dest_id = 2827
+    start_time_minutes = military_to_minutes("1436")
+    model_name = "relu1"
 
     # Load the data
-    if False:
-        DATA = load_data()
-        intersections, test_data = generate_intersections(DATA)
-        test_data.to_csv("data/test-data.csv", index=False)
-        intersections.to_csv("data/train-data.csv", index=False)
-        # Train models
+    # if False:
+    #     DATA = load_data()
+    #     intersections, test_data = generate_intersections(DATA)
+    #     test_data.to_csv("data/test-data.csv", index=False)
+    #     intersections.to_csv("data/train-data.csv", index=False)
+    #     # Train models
 
     if not os.path.isfile(test_file) or not os.path.isfile(train_file):
         DATA = load_data()
@@ -852,7 +873,10 @@ if __name__ == "__main__":
     if os.path.isfile(f"model/{model_name}.h5"):
         MODEL = save.load_model(f"model/{model_name}.h5")
         train_x, train_y, test_x, test_y, g_scaler = process_data("data/train-data.csv", "data/test-data.csv", lag)
-        X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
+        if model_name in shaped_models:
+            X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1], 1))
+        else:
+            X_test = np.reshape(test_x, (test_x.shape[0], test_x.shape[1]))
         REGRESSION = MODEL.predict(X_test)
         REGRESSION = g_scaler.inverse_transform(REGRESSION.reshape(-1, 1)).reshape(1, -1)[0]
     else:

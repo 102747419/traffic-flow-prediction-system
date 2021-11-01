@@ -5,3 +5,4 @@ if __name__ == "__main__":
     model_name = sys.argv[1].lower()
 
     train(model_name)
+    test(model_name)
