@@ -780,6 +780,21 @@ def show_routes_on_map(routes, start_time_minutes):
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
+    # Zoom in on the routes
+    fig.update_layout(
+        autosize=True,
+        hovermode="closest",
+        mapbox=dict(
+            bearing=0,
+            center=dict(
+                lat=latitudes.mean(),
+                lon=longitudes.mean()
+            ),
+            pitch=0,
+            zoom=12
+        ),
+    )
+
     # Open map in browser
     fig.show()
 
