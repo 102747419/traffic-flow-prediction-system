@@ -406,10 +406,10 @@ def get_relu(layers, name):
 
     model = Sequential([
         Dense(1, input_shape=(layers[0],)),
-        Dense(layers[1], activation="relu"),
-        Dense(layers[2], activation="relu"),
-        Dense(layers[3], activation="relu"),
-        Dense(layers[4], activation="relu"),
+        Dense(layers[1], activation='relu'),
+        Dense(layers[2], activation='relu'),
+        Dense(layers[3], activation='relu'),
+        Dense(layers[4], activation='relu'),
         Dense(layers[5])])
 
     return model, train_model, name
