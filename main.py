@@ -794,7 +794,7 @@ def format_duration(minutes):
     mins = math.floor(minutes)
     hours = math.floor(mins / 60)
     mins %= 60
-    seconds = round((minutes - mins) * 60)
+    seconds = math.floor(minutes % 1 * 60)
 
     # Format as HH:MM:SS
     return f"{str(hours).zfill(2)}:{str(mins).zfill(2)}:{str(seconds).zfill(2)}"
