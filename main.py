@@ -379,7 +379,7 @@ def get_model(name):
     if name == "thick":
         return get_relu([lag + 1, 400, 400, 400, 400, 1], name)
     if name == "saes":
-        return get_saes2([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
+        return get_saes([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -430,7 +430,7 @@ def get_saes(layers):
         Dense(layers[6], activation="relu"),
         Dense(layers[7])])
 
-    return model, train_model, "saes2"
+    return model, train_model, "saes"
 
 
 def get_lstm(units):
@@ -904,13 +904,17 @@ def show_gui():
 if __name__ == "__main__":
     # MODEL TEST - TEMP
     train("relu")
-    train("thick")
-    train("saes")
-    input("\nPress Enter to continue...")
+    # input("\nPress Enter to continue...")
     test("relu")
-    test("thick")
-    test("saes")
     input("\nPress Enter to continue...")
+    # train("relu")
+    # train("thick")
+    # train("saes")
+    # input("\nPress Enter to continue...")
+    # test("relu")
+    # test("thick")
+    # test("saes")
+    # input("\nPress Enter to continue...")
 
 
     if False:
