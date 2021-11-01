@@ -21,7 +21,7 @@ import astar
 lag = 8
 train_file = "data/train-data.csv"
 test_file = "data/test-data.csv"
-shaped_models = ["lstm", "gru"]
+shaped_models = ["lstm", "gru", "relu"]
 config = {"batch": 40, "epochs": 4}
 
 graph = {
@@ -408,7 +408,7 @@ def get_model(name):
     if name == "lstm":
         return get_lstm([lag + 1, 64, 64, 1])
     if name == "relu":
-        return get_relu([lag + 1, 100, 50, 75, 100, 1], name)
+        return get_relu([lag + 1, 64, 64, 1])
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -428,20 +428,26 @@ def get_gru(layers):
     return model, train_model, "gru"
 
 
-def get_relu(layers, name):
+def get_relu(layers):
     """
     Get the ReLU model with the given layers.
     """
 
-    model = Sequential([
-        Dense(1, input_dim=layers[0]),
-        Dense(layers[1], activation='relu'),
-        Dense(layers[2], activation='relu'),
-        Dense(layers[3], activation='relu'),
-        Dense(layers[4], activation='relu'),
-        Dense(layers[5])])
+    # model = Sequential([
+    #     Dense(1, input_dim=layers[0]),
+    #     Dense(layers[1], activation='relu'),
+    #     Dense(layers[2], activation='relu'),
+    #     Dense(layers[3], activation='relu'),
+    #     Dense(layers[4], activation='relu'),
+    #     Dense(layers[5])])
 
-    return model, train_model, name
+    model = Sequential()
+    model.add(GRU(layers[1], input_shape=(layers[0], 1), return_sequences=True))
+    model.add(GRU(layers[2]))
+    model.add(Dropout(0.2))
+    model.add(Dense(layers[3], activation="sigmoid"))
+
+    return model, train_model, "relu"
 
 
 def get_saes(layers):
@@ -459,7 +465,7 @@ def get_saes(layers):
         Dense(layers[6], activation='relu'),
         Dense(layers[7])])
 
-    return model, train_model, "saes2"
+    return model, train_model, "saes"
 
 
 def get_lstm(units):
@@ -491,7 +497,7 @@ def test(model_name):
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
 
     # Reshape the test data so it works with the model
-    if model_name == "gru" or model_name == "lstm":
+    if model_name in shaped_models:
         X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
     else:
         X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1]))
@@ -835,14 +841,6 @@ if __name__ == "__main__":
     dest_id = int(sys.argv[2])
     start_time_minutes = military_to_minutes(sys.argv[3])
     model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
-
-    train("relu")
-
-    test("relu")
-    # test("saes")
-    # test("lstm")
-    # test("gru")
-    input("\nPress Enter to continue...")
 
     # Load the data
     if False:
