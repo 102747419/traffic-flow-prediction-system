@@ -21,7 +21,7 @@ import astar
 lag = 8
 train_file = "data/train-data.csv"
 test_file = "data/test-data.csv"
-shaped_models = ["lstm", "gru"]
+shaped_models = ["lstm", "gru", "gru2"]
 config = {"batch": 40, "epochs": 4}
 
 graph = {
@@ -380,6 +380,8 @@ def get_model(name):
         return get_relu([lag + 1, 400, 400, 400, 400, 1], name)
     if name == "saes":
         return get_saes([lag + 1, 400, 1, 400, 1, 400, 1, 400, 1])
+    if name == "gru2":
+        return get_gru2([lag + 1, 400, 400, 1])
 
     # Return gru by default
     return get_gru([lag + 1, 64, 64, 1])
@@ -397,6 +399,20 @@ def get_gru(layers):
     model.add(Dense(layers[3], activation="sigmoid"))
 
     return model, train_model, "gru"
+
+
+def get_gru2(layers):
+    """
+    Get the GRU model with the given layers.
+    """
+
+    model = Sequential()
+    model.add(GRU(layers[1], input_shape=(layers[0], 1), return_sequences=True))
+    model.add(GRU(layers[2]))
+    model.add(Dropout(0.2))
+    model.add(Dense(layers[3], activation="sigmoid"))
+
+    return model, train_model, "gru2"
 
 
 def get_relu(layers, name):
@@ -930,9 +946,9 @@ def show_gui():
 
 if __name__ == "__main__":
     # MODEL TEST - TEMP
-    train("relu")
+    train("gru2")
     # input("\nPress Enter to continue...")
-    test("relu")
+    test("gru2")
     input("\nPress Enter to continue...")
     # train("relu")
     # train("thick")
