@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import sklearn.metrics as metrics
 from keras.engine.training import Model
 from keras.layers import Dense, Dropout
 from keras.layers.core import Activation
@@ -488,6 +489,20 @@ def test(model_name):
 
     # Unscale predicted data
     predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
+
+    # Calculate regression metrics
+    mape = metrics.mean_absolute_percentage_error(y_test, predicted)
+    vs = metrics.explained_variance_score(y_test, predicted)
+    mse = metrics.mean_squared_error(y_test, predicted)
+    mae = metrics.mean_absolute_error(y_test, predicted)
+    r2 = metrics.r2_score(y_test, predicted)
+
+    # Print the metrics
+    print(f"MAPE: {mape}")
+    print(f"Variance score: {vs}")
+    print(f"MSE: {mse}")
+    print(f"MAE: {mae}")
+    print(f"R2: {r2}")
 
     # Plot results!
     plot_results(y_test, predicted, model_name)
