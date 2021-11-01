@@ -488,22 +488,23 @@ def test(model_name):
     # Unscale predicted data
     predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
 
-    # Calculate regression metrics
+    # Visualise!
+    print_metrics(y_test, predicted)
+    plot_results(y_test, predicted, model_name)
+
+
+def print_metrics(y_test, predicted):
     mape = metrics.mean_absolute_percentage_error(y_test, predicted)
     vs = metrics.explained_variance_score(y_test, predicted)
     mse = metrics.mean_squared_error(y_test, predicted)
     mae = metrics.mean_absolute_error(y_test, predicted)
     r2 = metrics.r2_score(y_test, predicted)
 
-    # Print the metrics
     print(f"MAPE: {mape}")
     print(f"Variance score: {vs}")
     print(f"MSE: {mse}")
     print(f"MAE: {mae}")
     print(f"R2: {r2}")
-
-    # Plot results!
-    plot_results(y_test, predicted, model_name)
 
 
 def plot_results(y_true, y_pred, name):
