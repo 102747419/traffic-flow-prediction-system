@@ -1,6 +1,7 @@
 import math
 import os
 import sys
+import tkinter as tk
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -800,7 +801,7 @@ def format_duration(minutes):
     return f"{str(hours).zfill(2)}:{str(mins).zfill(2)}:{str(seconds).zfill(2)}"
 
 
-def print_routes(routes):
+def print_routes(routes, start_time_minutes):
     """
     Print the routes to the console with the intersections along the route, the total travel time, and the total distance.
     """
@@ -815,7 +816,7 @@ def print_routes(routes):
         print(f"Duration: {format_duration(travel_time)}")
 
 
-def show_routes_on_map(routes):
+def show_routes_on_map(routes, start_time_minutes):
     """
     Show the routes on a map in a new browser window.
     """
@@ -854,20 +855,22 @@ def show_routes_on_map(routes):
     fig.show()
 
 
-def calc_routes(time, start_id, dest_id):
+def calc_routes(start_id, dest_id, start_time_minutes):
+    if start_id == dest_id:
+        print("Please specify different start and destination locations.")
+        return
+
     print("Begin calculating routes...")
     # Get best routes
-    routes = a_star_multiple(start_id, dest_id, time)
+    routes = a_star_multiple(start_id, dest_id, start_time_minutes)
 
     print("Finished calculating routes")
 
     # Print routes to console
-    print_routes(routes)
-
-    input("\nPress Enter to continue...")
+    print_routes(routes, start_time_minutes)
 
     # Show on map
-    show_routes_on_map(routes)
+    show_routes_on_map(routes, start_time_minutes)
 
 
 def init(model_name):
@@ -896,16 +899,79 @@ def init(model_name):
     return REGRESSION, pd.read_csv(train_file)
 
 
+def show_gui():
+    window = tk.Tk()
+
+    # define widgets
+    canvas = tk.Canvas(window, width=600, height=500)
+    canvas.pack()
+
+    unique_sites = intersections.drop_duplicates("SCATS Number")
+    INTERSECTIONS = unique_sites["SCATS Number"].values
+
+    HOURS = []
+    for i in range(0, 24):
+        HOURS.append(i)
+
+    MINUTES = [0, 15, 30, 45]
+
+    hours = tk.IntVar(window)
+    hours.set(HOURS[0])  # default value
+    minutes = tk.IntVar(window)
+    minutes.set(MINUTES[0])  # default value
+    start = tk.StringVar(window)
+    start.set(INTERSECTIONS[0])  # default value
+    end = tk.StringVar(window)
+    end.set(INTERSECTIONS[0])  # default value
+
+    # right_offset, Start, length, end
+    # canvas.create_line(0, 100, 600, 100)
+
+    lbl_heading = tk.Label(window, text='Traffic Flow Prediction')
+    lbl_heading.config(font=('helvetica', 20))
+    lbl_time = tk.Label(window, text='Departure Time: ')
+    # txt_time = tk.Entry(window)
+    drp_hour = tk.OptionMenu(window, hours, *HOURS)
+    drp_minute = tk.OptionMenu(window, minutes, *MINUTES)
+    lbl_start = tk.Label(window, text='Starting Location: ')
+    drp_start = tk.OptionMenu(window, start, *INTERSECTIONS)
+    lbl_end = tk.Label(window, text='Destination: ')
+    drp_end = tk.OptionMenu(window, end, *INTERSECTIONS)
+    btn_exit = tk.Button(window, text='exit', command=window.destroy)
+    btn_calculate = tk.Button(window, text='Calculate Route', command=lambda: calc_routes(int(start.get()), int(end.get()), int(hours.get() * 60 + minutes.get())))
+
+    # render widgets
+    canvas.create_window(300, 20, window=lbl_heading)
+    canvas.create_window(150, 60, window=lbl_time)
+    # canvas.create_window(450, 60, window=txt_time)
+    canvas.create_window(400, 60, window=drp_hour)
+    canvas.create_window(490, 60, window=drp_minute)
+    canvas.create_window(150, 100, window=lbl_start)
+    canvas.create_window(450, 100, window=drp_start)
+    canvas.create_window(150, 140, window=lbl_end)
+    canvas.create_window(450, 140, window=drp_end)
+    canvas.create_window(150, 200, window=btn_exit)
+    canvas.create_window(450, 200, window=btn_calculate)
+    window.mainloop()
+
+
 if __name__ == "__main__":
+    if False:
+        ###### Command-line implementation ######
 
-    # Get input arguments
-    start_id = int(sys.argv[1])
-    dest_id = int(sys.argv[2])
-    start_time_minutes = military_to_minutes(sys.argv[3])
-    model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
+        start_id = int(sys.argv[1])
+        dest_id = int(sys.argv[2])
+        start_time_minutes = military_to_minutes(sys.argv[3])
+        model_name = sys.argv[4].lower() if len(sys.argv) > 4 else "gru"
 
-    # Initialise
-    REGRESSION, intersections = init(model_name)
+        REGRESSION, intersections = init(model_name)
 
-    # Calculate best routes
-    calc_routes(start_time_minutes, start_id, dest_id)
+        calc_routes(start_id, dest_id, start_time_minutes)
+    else:
+        ###### GUI implementation ######
+
+        model_name = sys.argv[1].lower() if len(sys.argv) > 1 else "gru"
+
+        REGRESSION, intersections = init(model_name)
+
+        show_gui()
